@@ -2,77 +2,97 @@
 
 # Xprinter Setup for macOS
 
-Connect an **Xprinter XP-420B** (and other Xprinter label printers with the X4 Wi-Fi module, e.g. XP-460B) to your Wi-Fi network from a Mac — no Windows and no vendor tool needed.
+Connect an **Xprinter XP-420B** label printer to Wi-Fi from a Mac — no Windows, no vendor tool, no wasted labels.
+Pick your network, type the password, press **Connect**. The app sends the settings over USB, asks the printer for its new address and adds it to macOS as a Wi-Fi printer.
 
 [Русская версия ниже](#русский)
+
+## Tested printer
+
+**Xprinter XP-420B (USB + Wi-Fi, 203 dpi, 108 mm)**, firmware 1.040.3552, Wi-Fi module X4_V95.0.9.
+
+That is the only printer it has been tested on. Other Xprinter label printers that speak TSPL and have the same Wi-Fi module will *probably* work, because the vendor's Windows tool uses the same commands for all of them — but this has not been checked. Reports are welcome in [Issues](../../issues).
 
 ## Download
 
 Get `Xprinter-Setup.zip` from [Releases](../../releases), unzip, and move **Xprinter Setup** to Applications.
 The app is not notarized: on first launch, right-click it → **Open** → **Open**.
-
-Requires macOS 13 or later (Apple Silicon and Intel).
+Requires macOS 13 or later (Apple Silicon and Intel). The Xprinter macOS driver must be installed (it usually is, if the printer already prints over USB).
 
 ## How to use
 
-1. Connect the printer with a USB cable and make sure it appears in **System Settings → Printers & Scanners** (install the Xprinter driver if needed).
-2. Open **Xprinter Setup**, pick your network from the list, enter the password and press **Connect Printer to Wi-Fi**.
-   The printer supports **2.4 GHz** networks only, so 5 GHz-only networks are hidden. macOS shows network names only to apps with Location access — allow it when asked (or choose **Other Network…** and type the name).
-3. Wait ~30 seconds and press **Print Self-Test Page**. The `STA IP` line shows the printer's address in your network.
-4. Press **Find** (or type the address) and **Add Wi-Fi Printer to macOS**. Choose the new “(Wi-Fi)” printer in any Print dialog.
+1. Connect the printer with a USB cable and turn it on.
+2. Choose your Wi-Fi network, enter the password, press **Connect**.
+   The printer supports **2.4 GHz** networks only, so 5 GHz-only networks are not listed. macOS shows network names only to apps with Location access — allow it when asked, or choose **Other Network…** and type the name.
+3. Wait about 30 seconds. When you see **All set**, choose the new “… (Wi-Fi)” printer in any Print dialog and unplug the cable.
 
 Tip: reserve the printer's address in your router (DHCP reservation), so it never changes.
 
-## Why this exists
+**Printer Settings (⌘,)** — over USB, read from the printer and applied immediately: darkness (0–15), speed (2–6 in/s), rotate 180°, mirror, reprint after an error, fine position (tear-off offset, shift, origin), printer info. A test page is printed only when you ask for it.
 
-Out of the box, the XP-420B only runs its own access point (`XP-420B` / `12345678`, `10.10.100.1`) and has no web setup page.
-Joining a home network requires sending commands over USB, which the vendor only does from a Windows tool.
-This app sends the same commands through macOS printing (CUPS).
+Deliberately **not** included, to keep the printer safe: factory/head calibration commands, factory reset (it would also erase Wi-Fi settings), firmware and file operations, changing the printer's own access point, and paper-sensor calibration (feeds several labels; may be added after testing).
 
-### Protocol
+## The problem this solves
 
-Plain TSPL text sent raw to the printer (over USB or TCP port 9100):
+- Xprinter XP-420B Wi-Fi setup on Mac / macOS
+- XP-420B does not connect to Wi-Fi, only shows its own network `XP-420B` (password `12345678`)
+- `10.10.100.1` does not open, `ERR_CONNECTION_REFUSED`, no web configuration page
+- Self-test page shows `STA IP: 0.0.0.0`
+- Xprinter Diagnostic Tool / Wi-Fi config tool is Windows-only
+- Print Label app does not find the printer
+
+## Protocol
+
+Plain TSPL text sent raw to the printer over USB (bulk endpoints of the printer-class interface, vendor ID `0x2D37`) or TCP port 9100. Replies come back on the same channel.
 
 | Command | Effect |
 |---|---|
-| `WIFI CONNECTION "<ssid>","<password>"` | Join a Wi-Fi network (STA mode, address via DHCP) |
+| `WIFI CONNECTION "<ssid>","<password>"` | Join a Wi-Fi network (STA mode, DHCP) |
 | `WIFI RESET` | Restart the Wi-Fi module to apply settings |
-| `SELFTEST` | Print the self-test page with AP/STA addresses |
+| `WIFI GETIP` | Reply `+OK=<address>` (`0.0.0.0` when not connected) |
+| `ALLCONFIG` | Reply with all settings as `Key: Value` lines |
+| `OUT "<text>"` | Echo text back — handy as an end-of-reply marker |
+| `DENSITY n` (0–15), `SPEED n` (2–6), `DIRECTION r,m`, `SET REPRINT ON/OFF`, `OFFSET n dot`, `SHIFT x,y`, `REFERENCE x,y` | Print settings, stored in the printer |
+| `SELFTEST` | Print the self-test page |
 
-Strings have no escaping, so the network name and password cannot contain `"`.
-The same from Terminal:
+Strings have no escaping, so the network name and password cannot contain `"`. Without the app, from Terminal:
 
 ```sh
 printf 'WIFI CONNECTION "MyWiFi","password"\r\nWIFI RESET\r\n' | lp -d Xprinter_XP_420B -o raw
 ```
 
-The commands were identified for interoperability by examining what the vendor's Windows tool sends. No vendor code is included in this repository.
-Tested on an XP-420B, firmware 1.040.3552, Wi-Fi module X4_V95.0.9.
+The commands were identified for interoperability by examining what the vendor's Windows tool sends, and every command above was verified on a real XP-420B by writing a value and reading it back. No vendor code is included in this repository.
 
 ## Build from source
 
 ```sh
-swift test          # unit tests
-./build-app.sh      # → dist/Xprinter Setup.app and dist/Xprinter-Setup.zip
+swift test                         # unit tests
+XPRINTER_LIVE=1 swift test         # plus a read-only check with a printer on USB
+./build-app.sh                     # → dist/Xprinter Setup.app and dist/Xprinter-Setup.zip
 ```
+
+## Disclaimer
+
+This is a free, unofficial project, not affiliated with Xprinter. It is provided **“as is”, without warranty of any kind** — you use it at your own risk. The authors are not liable for any damage to your printer, data or anything else. See [LICENSE](LICENSE) (MIT).
 
 ---
 
 ## Русский
 
-Программа подключает принтер этикеток **Xprinter XP-420B** (и другие Xprinter с модулем Wi-Fi X4, например XP-460B) к домашнему Wi-Fi прямо с Mac — без Windows и фирменной утилиты. Язык интерфейса — как в системе (русский или английский).
+Бесплатная программа для Mac, которая подключает принтер этикеток **Xprinter XP-420B** к Wi‑Fi — без Windows, без фирменной утилиты и без лишних этикеток. Выберите сеть, введите пароль, нажмите «Подключить»: программа отправит настройки по USB, узнает у принтера новый адрес и сама добавит его в macOS как Wi‑Fi принтер. Язык интерфейса — как в системе (русский или английский).
 
-**Установка:** скачайте `Xprinter-Setup.zip` в [Releases](../../releases), распакуйте и перенесите в «Программы». При первом запуске: правый клик → «Открыть» → «Открыть» (программа не нотаризована).
+**Проверено на:** Xprinter XP-420B (USB + Wi‑Fi, 203 dpi, 108 мм), прошивка 1.040.3552, модуль Wi‑Fi X4_V95.0.9. На других моделях Xprinter с таким же модулем Wi‑Fi программа, вероятно, тоже заработает, но это не проверялось — напишите в [Issues](../../issues), если попробуете.
+
+**Установка:** скачайте `Xprinter-Setup.zip` в [Releases](../../releases), распакуйте, перенесите в «Программы». При первом запуске: правый клик → «Открыть» → «Открыть» (программа не нотаризована). Нужны macOS 13+ и установленный драйвер Xprinter.
 
 **Как пользоваться:**
 
-1. Подключите принтер по USB — он должен появиться в «Системные настройки → Принтеры и сканеры».
-2. Выберите сеть из списка, введите пароль и нажмите «Подключить принтер к Wi‑Fi». Принтер работает **только с 2,4 ГГц**, поэтому сети только на 5 ГГц скрыты. Список сетей macOS показывает только с разрешением на геолокацию — разрешите его (или выберите «Другая сеть…» и введите название).
-3. Через ~30 секунд нажмите «Напечатать тестовую страницу» — в строке `STA IP` будет адрес принтера.
-4. Нажмите «Найти» (или введите адрес) и «Добавить Wi‑Fi принтер в macOS». Новый принтер «(Wi-Fi)» выбирайте в окне печати.
+1. Подключите принтер кабелем USB и включите.
+2. Выберите сеть, введите пароль, нажмите «Подключить». Принтер работает **только с 2,4 ГГц**, поэтому сети только на 5 ГГц не показаны. Список сетей macOS показывает только с разрешением на геолокацию — разрешите или выберите «Другая сеть…».
+3. Через ~30 секунд появится «Готово» — выбирайте новый принтер «(Wi-Fi)» в окне печати, кабель можно отключить.
 
-Совет: закрепите адрес принтера в роутере, чтобы он не менялся.
+**Настройки принтера (⌘,):** плотность, скорость, поворот, зеркальная печать, повтор после ошибки, точное положение, сведения о принтере. Тестовая страница печатается только по вашему запросу.
 
-## License
+**Типичные проблемы, которые решает программа:** XP-420B не подключается к Wi‑Fi, видна только сеть `XP-420B` (пароль `12345678`); не открывается `10.10.100.1`; на тестовой странице `STA IP: 0.0.0.0`; утилита Xprinter Diagnostic Tool работает только на Windows; приложение Print Label не находит принтер; как настроить Wi‑Fi принтера этикеток Xprinter на MacBook.
 
-MIT
+**Отказ от ответственности.** Программа бесплатная и неофициальная, не связана с компанией Xprinter. Она предоставляется **«как есть», без каких-либо гарантий** — вы используете её на свой страх и риск. Авторы не несут ответственности за возможный ущерб принтеру, данным или чему-либо ещё. Лицензия — [MIT](LICENSE).

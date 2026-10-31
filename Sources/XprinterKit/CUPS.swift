@@ -1,11 +1,9 @@
 import Foundation
 
 /// A printer queue configured in macOS (CUPS).
-public struct PrinterQueue: Hashable, Identifiable {
+public struct PrinterQueue: Hashable {
     public let name: String
     public let uri: String
-    public var id: String { name }
-    public var isUSB: Bool { uri.hasPrefix("usb://") }
 }
 
 public enum CUPS {
@@ -18,26 +16,46 @@ public enum CUPS {
         }
     }
 
-    /// Xprinter queues connected over USB.
-    public static func xprinterUSBQueues() -> [PrinterQueue] {
-        let out = (try? run("/usr/bin/lpstat", ["-v"])) ?? ""
-        return parseQueues(out).filter { $0.isUSB && $0.uri.localizedCaseInsensitiveContains("xprinter") }
+    public static func queues() -> [PrinterQueue] { parseQueues((try? run("/usr/bin/lpstat", ["-v"])) ?? "") }
+
+    /// Queue name for the Wi-Fi printer, e.g. "Xprinter_XP_420B_WiFi".
+    public static func queueName(model: String) -> String {
+        "Xprinter_" + model.map { $0.isLetter || $0.isNumber ? $0 : "_" } + "_WiFi"
     }
 
-    /// Sends bytes to a queue unchanged (raw), the way a USB tool would write them.
-    public static func sendRaw(_ data: Data, to queue: String) throws {
-        try run("/usr/bin/lp", ["-d", queue, "-o", "raw"], input: data)
+    /// Driver file for the model: from an existing USB queue, or from the installed Xprinter driver.
+    public static func ppd(model: String) -> String? {
+        let fm = FileManager.default
+        for q in queues() where q.uri.hasPrefix("usb://") && q.uri.localizedCaseInsensitiveContains("xprinter") {
+            let path = "/etc/cups/ppd/\(q.name).ppd"
+            if fm.isReadableFile(atPath: path) { return path }
+        }
+        let dir = "/Library/Printers/PPDs/Contents/Resources"
+        let needle = model.replacingOccurrences(of: "-", with: "").lowercased()
+        let file = (try? fm.contentsOfDirectory(atPath: dir))?.first {
+            $0.replacingOccurrences(of: "-", with: "").lowercased().contains(needle)
+        }
+        return file.map { "\(dir)/\($0)" }
     }
 
-    /// Adds a network (port 9100) queue that reuses the driver of the USB queue.
-    public static func addNetworkQueue(from usb: PrinterQueue, ip: String) throws -> String {
-        let name = usb.name + "_WiFi"
-        let ppd = "/etc/cups/ppd/\(usb.name).ppd"
-        var args = ["-p", name, "-D", "\(usb.name.replacingOccurrences(of: "_", with: " ")) (Wi-Fi)",
-                    "-v", "socket://\(ip):9100", "-E"]
-        args += FileManager.default.fileExists(atPath: ppd) ? ["-P", ppd] : ["-m", "raw"]
-        try run("/usr/sbin/lpadmin", args)
+    /// Adds the Wi-Fi printer, or updates its address if it already exists. Returns the queue name.
+    @discardableResult
+    public static func addOrUpdateWiFiQueue(model: String, ip: String) throws -> String {
+        let name = queueName(model: model)
+        let uri = "socket://\(ip):9100"
+        if queues().contains(where: { $0.name == name }) {
+            try run("/usr/sbin/lpadmin", ["-p", name, "-v", uri, "-E"])
+            return name
+        }
+        guard let ppd = ppd(model: model) else { throw NoDriver() }
+        try run("/usr/sbin/lpadmin", ["-p", name, "-D", "Xprinter \(model) (Wi-Fi)", "-v", uri, "-P", ppd, "-E"])
         return name
+    }
+
+    public struct NoDriver: LocalizedError {
+        public var errorDescription: String? {
+            String(localized: "The Xprinter driver is not installed. Install it from xprintertech.com, then try again.", bundle: .module)
+        }
     }
 
     public struct CommandError: LocalizedError {
@@ -46,16 +64,14 @@ public enum CUPS {
     }
 
     @discardableResult
-    static func run(_ tool: String, _ args: [String], input: Data? = nil) throws -> String {
+    static func run(_ tool: String, _ args: [String]) throws -> String {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: tool)
         p.arguments = args
         p.environment = ["LANG": "C", "LC_ALL": "C"]  // stable lpstat output for parsing
-        let out = Pipe(), err = Pipe(), inp = Pipe()
-        p.standardOutput = out; p.standardError = err; p.standardInput = inp
+        let out = Pipe(), err = Pipe()
+        p.standardOutput = out; p.standardError = err
         try p.run()
-        if let input { inp.fileHandleForWriting.write(input) }
-        try inp.fileHandleForWriting.close()
         let stdout = out.fileHandleForReading.readDataToEndOfFile()
         let stderr = err.fileHandleForReading.readDataToEndOfFile()
         p.waitUntilExit()

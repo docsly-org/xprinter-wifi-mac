@@ -6,7 +6,7 @@ let package = Package(
     defaultLocalization: "en",
     platforms: [.macOS(.v13)],
     targets: [
-        .target(name: "XprinterKit"),
+        .target(name: "XprinterKit", resources: [.process("Resources")]),
         .executableTarget(
             name: "XprinterSetup",
             dependencies: ["XprinterKit"],

@@ -9,7 +9,7 @@ BIN=$(swift build -c release --arch arm64 --arch x86_64 --show-bin-path)
 APP="dist/Xprinter Setup.app"
 rm -rf dist && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/XprinterSetup" "$APP/Contents/MacOS/"
-cp -R "$BIN/XprinterSetup_XprinterSetup.bundle" "$APP/Contents/Resources/"
+cp -R "$BIN"/*.bundle "$APP/Contents/Resources/"
 cp Info.plist "$APP/Contents/"
 cp Assets/AppIcon.icns "$APP/Contents/Resources/"
 codesign --force --deep -s - "$APP"
