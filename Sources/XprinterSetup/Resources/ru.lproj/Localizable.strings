@@ -50,3 +50,5 @@
 "Print" = "Напечатать";
 "The page lists the printer’s settings and uses about one label." = "На странице будут настройки принтера. Уйдёт примерно одна этикетка.";
 "Connect the printer with a USB cable to change its settings." = "Чтобы изменить настройки, подключите принтер кабелем USB.";
+"Required" = "Обязательно";
+"Values are in dots: 8 dots = 1 mm." = "Значения в точках: 8 точек = 1 мм.";

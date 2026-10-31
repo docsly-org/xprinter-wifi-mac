@@ -25,7 +25,7 @@ struct XprinterSetupApp: App {
             SettingsView()
                 .environmentObject(printer)
                 .frame(width: 460)
-                .frame(minHeight: 420)
+                .frame(minHeight: Demo.isOn ? 790 : 420)
         }
         .windowResizability(.contentSize)
     }

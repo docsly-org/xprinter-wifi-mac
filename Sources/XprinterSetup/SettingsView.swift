@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var printer: PrinterModel
     @State private var density = 8.0
     @State private var confirmTestPage = false
+    @State private var showPosition = Demo.isOn
 
     var body: some View {
         if let c = printer.config {
@@ -38,7 +39,7 @@ struct SettingsView: View {
                 } header: { Text("Printing", bundle: .module) }
 
                 Section {
-                    DisclosureGroup {
+                    DisclosureGroup(isExpanded: $showPosition) {
                         dots("Tear-off offset", c.offset) { printer.apply(XprinterCommand.offset($0)) }
                         dots("Shift horizontally", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0)) }
                         dots("Shift vertically", c.shiftY) { printer.apply(XprinterCommand.shift(x: c.shiftX ?? 0, y: $0)) }
@@ -46,7 +47,7 @@ struct SettingsView: View {
                         dots("Origin Y", c.referenceY) { printer.apply(XprinterCommand.reference(x: c.referenceX ?? 0, y: $0)) }
                     } label: { Text("Fine position", bundle: .module) }
                 } footer: {
-                    Text("In dots: 8 dots = 1 mm.", bundle: .module).font(.callout).foregroundStyle(.secondary)
+                    Text("Values are in dots: 8 dots = 1 mm.", bundle: .module).font(.callout).foregroundStyle(.secondary)
                 }
 
                 Section {
@@ -65,6 +66,7 @@ struct SettingsView: View {
                 }
             }
             .formStyle(.grouped)
+            .scrollDisabled(Demo.isOn)  // screenshots: a non-scrolling form can be snapshotted
             .onAppear { density = Double(c.density ?? 8) }
             .onChange(of: c.density) { density = Double($0 ?? 8) }
             .confirmationDialog(Text("Print a test page?", bundle: .module), isPresented: $confirmTestPage) {
@@ -87,9 +89,16 @@ struct SettingsView: View {
         LabeledContent { Text(value ?? "—").textSelection(.enabled) } label: { Text(loc(title)) }
     }
 
+    /// Number field with stepper, like in System Settings. Values are in dots.
     private func dots(_ title: String.LocalizationValue, _ value: Int?, set: @escaping (Int) -> Void) -> some View {
-        Stepper(value: Binding(get: { value ?? 0 }, set: set), in: -400...400) {
-            LabeledContent { Text("\(value ?? 0)").monospacedDigit() } label: { Text(loc(title)) }
-        }
+        let binding = Binding(get: { value ?? 0 }, set: { set(min(max($0, -400), 400)) })
+        return LabeledContent {
+            HStack(spacing: 6) {
+                TextField("", value: binding, format: .number)
+                    .labelsHidden().multilineTextAlignment(.trailing).frame(width: 56)
+                    .textFieldStyle(.roundedBorder)
+                Stepper("", value: binding, in: -400...400).labelsHidden()
+            }
+        } label: { Text(loc(title)) }
     }
 }

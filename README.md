@@ -7,6 +7,12 @@ Pick your network, type the password, press **Connect**. The app sends the setti
 
 [Русская версия ниже](#русский)
 
+<p align="center">
+  <img src="Screenshots/setup-en.png" width="280" alt="">
+  <img src="Screenshots/done-en.png" width="280" alt="">
+  <img src="Screenshots/settings-en.png" width="250" alt="">
+</p>
+
 ## Tested printer
 
 **Xprinter XP-420B (USB + Wi-Fi, 203 dpi, 108 mm)**, firmware 1.040.3552, Wi-Fi module X4_V95.0.9.
@@ -69,6 +75,7 @@ The commands were identified for interoperability by examining what the vendor's
 swift test                         # unit tests
 XPRINTER_LIVE=1 swift test         # plus a read-only check with a printer on USB
 ./build-app.sh                     # → dist/Xprinter Setup.app and dist/Xprinter-Setup.zip
+"dist/Xprinter Setup.app/Contents/MacOS/XprinterSetup" --screenshots Screenshots   # README screenshots (sample data, never touches a printer)
 ```
 
 ## Disclaimer
@@ -80,6 +87,12 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 ## Русский
 
 Бесплатная программа для Mac, которая подключает принтер этикеток **Xprinter XP-420B** к Wi‑Fi — без Windows, без фирменной утилиты и без лишних этикеток. Выберите сеть, введите пароль, нажмите «Подключить»: программа отправит настройки по USB, узнает у принтера новый адрес и сама добавит его в macOS как Wi‑Fi принтер. Язык интерфейса — как в системе (русский или английский).
+
+<p align="center">
+  <img src="Screenshots/setup-ru.png" width="280" alt="">
+  <img src="Screenshots/done-ru.png" width="280" alt="">
+  <img src="Screenshots/settings-ru.png" width="250" alt="">
+</p>
 
 **Проверено на:** Xprinter XP-420B (USB + Wi‑Fi, 203 dpi, 108 мм), прошивка 1.040.3552, модуль Wi‑Fi X4_V95.0.9. На других моделях Xprinter с таким же модулем Wi‑Fi программа, вероятно, тоже заработает, но это не проверялось — напишите в [Issues](../../issues), если попробуете.
 

@@ -11,12 +11,16 @@ final class WiFiScanner: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var needsLocation = false
     private let location = CLLocationManager()
 
-    override init() {
+    private let demo: Bool
+
+    init(demo: Bool = false) {
+        self.demo = demo
         super.init()
         location.delegate = self
     }
 
     func scan() {
+        if demo { result = Result(networks24: Demo.networks, only5GHz: 1, current: Demo.networks[0]); return }
         switch location.authorizationStatus {
         case .notDetermined: location.requestWhenInUseAuthorization(); return  // scan resumes in the delegate
         case .denied, .restricted: needsLocation = true; return

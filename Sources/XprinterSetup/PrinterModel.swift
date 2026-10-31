@@ -19,7 +19,14 @@ final class PrinterModel: ObservableObject {
     @Published var settingsError: String?
     private var polling: Task<Void, Never>?
 
-    init() { startPolling() }
+    init() {
+        if Demo.isOn {
+            config = Demo.config; phase = .ready
+            Task { await Demo.capture(self) }
+        } else {
+            startPolling()
+        }
+    }
 
     /// Watches for the USB printer and keeps `config` fresh.
     func startPolling() {
@@ -58,6 +65,7 @@ final class PrinterModel: ObservableObject {
             return
         } catch { return }
 
+        guard !Demo.isOn else { return }
         Task {
             do {
                 phase = .working(loc("Sending settings to the printer…"))
@@ -79,7 +87,8 @@ final class PrinterModel: ObservableObject {
                 let model = config?.model ?? "Printer"
                 let queue = try await Self.background { try CUPS.addOrUpdateWiFiQueue(model: model, ip: ip) }
                 await reload()
-                phase = .done(queue: queue.replacingOccurrences(of: "_", with: " "), ip: ip)
+                _ = queue
+                phase = .done(queue: "Xprinter \(model) (Wi-Fi)", ip: ip)
             } catch {
                 phase = .failed(error.localizedDescription)
             }
@@ -90,6 +99,7 @@ final class PrinterModel: ObservableObject {
 
     /// Sends a setting, then reads the configuration back so the UI shows what the printer really stored.
     func apply(_ command: Data) {
+        guard !Demo.isOn else { return }  // demo never talks to a printer
         Task {
             do {
                 try await Self.background { try USBPrinter.send(command) }

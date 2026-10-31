@@ -5,10 +5,11 @@ import XprinterKit
 struct SetupView: View {
     @EnvironmentObject var printer: PrinterModel
     @Environment(\.openWindow) private var openWindow
-    @StateObject private var wifi = WiFiScanner()
+    @StateObject private var wifi = WiFiScanner(demo: Demo.isOn)
     @State private var choice = SetupView.other
     @State private var ssid = ""
     @State private var password = ""
+    @FocusState private var passwordFocused: Bool
     static let other = "\u{0}other"  // can't collide with a real SSID
 
     var body: some View {
@@ -23,8 +24,14 @@ struct SetupView: View {
                     .disabled(printer.config == nil)
             }
         }
-        .onAppear { wifi.scan() }
-        .onChange(of: choice) { ssid = $0 == Self.other ? "" : $0 }
+        .onAppear {
+            wifi.scan()
+            if Demo.isOn { openWindow(id: "settings") }
+        }
+        .onChange(of: choice) {
+            ssid = $0 == Self.other ? "" : $0
+            if $0 != Self.other { passwordFocused = true }
+        }
         .onChange(of: wifi.result.networks24) { list in
             // preselect the Mac's own network when the printer can use it
             if choice == Self.other, ssid.isEmpty, let cur = wifi.result.current, list.contains(cur) { choice = cur }
@@ -33,9 +40,8 @@ struct SetupView: View {
 
     private var header: some View {
         VStack(spacing: 6) {
-            Image(systemName: "printer.fill")
-                .font(.system(size: 44, weight: .regular))
-                .foregroundStyle(.tint)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable().frame(width: 72, height: 72)
             Text(printer.config?.model.map { "Xprinter \($0)" } ?? "Xprinter")
                 .font(.title2.weight(.semibold))
             statusLine.font(.callout).foregroundStyle(.secondary)
@@ -89,9 +95,10 @@ struct SetupView: View {
                     Text("Other Network…", bundle: .module).tag(Self.other)
                 } label: { Text("Network", bundle: .module) }
                 if choice == Self.other {
-                    TextField(text: $ssid) { Text("Network name", bundle: .module) }
+                    TextField(text: $ssid, prompt: Text("Required", bundle: .module)) { Text("Network name", bundle: .module) }
                 }
-                SecureField(text: $password) { Text("Password", bundle: .module) }
+                SecureField(text: $password, prompt: Text("Required", bundle: .module)) { Text("Password", bundle: .module) }
+                    .focused($passwordFocused)
             } footer: {
                 VStack(alignment: .leading, spacing: 4) {
                     if wifi.needsLocation {
