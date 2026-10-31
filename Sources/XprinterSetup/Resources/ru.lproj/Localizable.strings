@@ -75,3 +75,6 @@
 "Add the printer to this Mac first." = "Сначала добавьте принтер на этот Mac.";
 "The default paper size when you print from any app. Change it when you load a roll of another size." = "Размер бумаги по умолчанию при печати из любой программы. Поменяйте его, когда вставите рулон другого размера.";
 "Download the Xprinter Driver…" = "Скачать драйвер Xprinter…";
+"Not responding" = "Не отвечает";
+"The printer does not answer. Turn it off, wait 5 seconds and turn it on again." = "Принтер не отвечает. Выключите его, подождите 5 секунд и включите снова.";
+"Check Again" = "Проверить снова";

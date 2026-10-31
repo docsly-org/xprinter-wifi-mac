@@ -97,7 +97,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
             .scrollDisabled(Demo.isOn)  // screenshots: a non-scrolling form can be snapshotted
-            .onAppear { density = Double(c.density ?? 8); Task { await printer.loadLabelSize() } }
+            .onAppear { density = Double(c.density ?? 8); printer.refresh(); Task { await printer.loadLabelSize() } }
             .onChange(of: c.density) { density = Double($0 ?? 8) }
             .confirmationDialog(Text("Print a test page?", bundle: .module), isPresented: $confirmTestPage) {
                 Button { printer.printSelfTest() } label: { Text("Print", bundle: .module) }

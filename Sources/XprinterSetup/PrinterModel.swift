@@ -58,7 +58,10 @@ final class PrinterModel: ObservableObject {
     }
     enum LinkPreference: String, CaseIterable { case auto, usb, wifi }
 
-    private var recheck = false
+    /// The printer accepts a connection (or is on USB) but answers nothing: its Wi-Fi module hung mid-transfer
+    /// and the printer waits for the rest. Only turning the printer off and on helps.
+    @Published var notResponding = false
+    private var recheck = true  // check the network once at launch
     nonisolated(unsafe) private static var searchedOnce = false  // touched only from findOnNetwork, one call at a time
     private var polling: Task<Void, Never>?
 
@@ -71,26 +74,32 @@ final class PrinterModel: ObservableObject {
         }
     }
 
-    /// Every 2 s: prefer USB. Without it, look for the printer on Wi-Fi every 30 s and re-check it every 30 s:
-    /// the printer's Wi-Fi module is fragile, so the network is touched as little as possible.
+    /// Asks the printer again (launch, app activation, Settings window, "Check Again").
+    func refresh() { recheck = true }
+
+    /// Every 2 s only the cable is checked (no printer traffic). The printer itself is asked only on `refresh()`
+    /// or when the cable comes or goes: its Wi-Fi module hangs after a while, so the app never polls it in the background.
     func startPolling() {
         polling?.cancel()
         polling = Task {
-            var tick = 0
             while !Task.isCancelled {
-                defer { tick += 1 }
                 if case .working = phase { try? await Task.sleep(nanoseconds: 2_000_000_000); continue }
                 usbPlugged = await Self.background { USBPrinter.isConnected }
                 let usb = preference != .wifi && usbPlugged
                 if usb {
-                    if link != .usb { link = .usb; await reload() }
+                    if link != .usb || recheck {
+                        link = .usb
+                        await reload()
+                        notResponding = config == nil
+                    }
                 } else if preference == .usb {
                     if link != nil { link = nil; config = nil }
-                } else if link == .usb || link == nil && (tick % 15 == 0 || recheck) {
-                    link = await Self.background { Self.findOnNetwork() }
+                    notResponding = false
+                } else if link == .usb || recheck {
+                    let found = await Self.background { Self.findOnNetwork() }
+                    link = found.link
                     await reload()
-                } else if case .network = link, tick % 15 == 0 {
-                    await reload()  // notices a printer that was turned off
+                    notResponding = config == nil && found.silent
                 }
                 recheck = false
                 if config == nil { link = nil }
@@ -103,15 +112,19 @@ final class PrinterModel: ObservableObject {
 
     /// Printers added to this Mac, an address typed by the user, then the vendor's broadcast search.
     /// The broadcast is best effort: some Wi-Fi setups drop it, hence the typed-address fallback.
-    nonisolated static func findOnNetwork() -> PrinterLink? {
+    /// `silent`: a known address accepts the connection but sends nothing back (hung Wi-Fi module).
+    nonisolated static func findOnNetwork() -> (link: PrinterLink?, silent: Bool) {
         let typed = UserDefaults.standard.string(forKey: "printerIP").map { [$0] } ?? []
-        let known = CUPS.xprinterNetworkHosts() + typed
-        if let link = known.lazy.map({ PrinterLink.network($0) }).first(where: { (try? Xprinter.config(via: $0))?.isValid == true }) {
-            return link
+        var silent = false
+        for host in Array(Set(CUPS.xprinterNetworkHosts() + typed)) {
+            let link = PrinterLink.network(host)
+            if (try? Xprinter.config(via: link))?.isValid == true { return (link, false) }
+            if NetworkPrinter.isReachable(host) { silent = true }
         }
-        guard !searchedOnce else { return nil }  // one broadcast per launch is enough
+        guard !searchedOnce else { return (nil, silent) }  // one broadcast per launch is enough
         searchedOnce = true
-        return Discovery.search().lazy.map { PrinterLink.network($0.ip) }.first { (try? Xprinter.config(via: $0))?.isValid == true }
+        let found = Discovery.search().lazy.map { PrinterLink.network($0.ip) }.first { (try? Xprinter.config(via: $0))?.isValid == true }
+        return (found, silent && found == nil)
     }
 
     func reload() async {

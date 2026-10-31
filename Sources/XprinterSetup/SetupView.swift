@@ -56,7 +56,9 @@ struct SetupView: View {
 
     /// One calm line with a colored dot, like the status of a device in System Settings.
     @ViewBuilder private var statusLine: some View {
-        if printer.config == nil {
+        if printer.notResponding {
+            dot(.red) { Text("Not responding", bundle: .module) }
+        } else if printer.config == nil {
             Text("Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi.", bundle: .module)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
         } else if printer.config?.wifiIP == nil {
@@ -77,6 +79,14 @@ struct SetupView: View {
 
     @ViewBuilder private var content: some View {
         switch printer.phase {
+        case .waitingForPrinter where printer.notResponding:
+            VStack(spacing: 12) {
+                Text("The printer does not answer. Turn it off, wait 5 seconds and turn it on again.", bundle: .module)
+                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                Button { printer.refresh() } label: { Text("Check Again", bundle: .module) }
+            }
+            .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 28)
+
         case .waitingForPrinter:
             VStack(spacing: 14) {
                 ProgressView().controlSize(.small)

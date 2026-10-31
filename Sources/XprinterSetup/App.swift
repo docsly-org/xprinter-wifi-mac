@@ -10,6 +10,9 @@ struct XprinterSetupApp: App {
         Window(Text("Xprinter Setup", bundle: .module), id: "main") {
             SetupView()
                 .environmentObject(printer)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    printer.refresh()
+                }
                 .frame(width: 420)
                 .fixedSize(horizontal: false, vertical: true)
         }
