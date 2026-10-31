@@ -28,7 +28,7 @@ final class XprinterKitTests: XCTestCase {
     XP-420B Version: 1.040.3552 CEZD\r
     Wifi : YES\r
     Wifi Name: XP-420B\r
-    Wifi Sta Ip: 192.168.31.125\r
+    Wifi Sta Ip: 192.168.1.50\r
     Wifi Versions: X4_V95.0.9\r
     Bluetooth Versions: \r
     Direction: 1\r
@@ -46,7 +46,7 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(c.model, "XP-420B")
         XCTAssertEqual(c.firmware, "1.040.3552 CEZD")
         XCTAssertTrue(c.hasWiFi)
-        XCTAssertEqual(c.wifiIP, "192.168.31.125")
+        XCTAssertEqual(c.wifiIP, "192.168.1.50")
         XCTAssertEqual(c.density, 8)
         XCTAssertEqual(c.speed, 6)
         XCTAssertEqual(c.rotated, true)
@@ -57,7 +57,7 @@ final class XprinterKitTests: XCTestCase {
     }
 
     func testOkReply() {
-        XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.31.125\r\nXPSETUP-END\r\n"), "192.168.31.125")
+        XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.1.50\r\nXPSETUP-END\r\n"), "192.168.1.50")
         XCTAssertNil(PrinterConfig.okValue("garbage"))
     }
 
