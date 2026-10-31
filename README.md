@@ -23,10 +23,13 @@ That is the only printer it has been tested on. Other Xprinter label printers th
 
 Get `Xprinter-Setup.zip` from [Releases](../../releases), unzip, and move **Xprinter Setup** to Applications.
 The app is not notarized: on first launch, right-click it → **Open** → **Open**.
-Requires macOS 13 or later (Apple Silicon and Intel). The Xprinter macOS driver must be installed (it usually is, if the printer already prints over USB).
+Requires macOS 13 or later (Apple Silicon and Intel).
+
+**The Xprinter macOS driver is required** — macOS does not include it. Download it from [xprintertech.com](https://www.xprintertech.com/) (Support → Download) and install it first. The app can connect the printer to Wi-Fi and change its settings without the driver, but printing needs it.
 
 ## How to use
 
+0. Install the Xprinter driver (see above).
 1. Connect the printer with a USB cable and turn it on.
 2. Choose your Wi-Fi network, enter the password, press **Connect**.
    The printer supports **2.4 GHz** networks only, so 5 GHz-only networks are not listed. macOS shows network names only to apps with Location access — allow it when asked, or choose **Other Network…** and type the name.
@@ -35,6 +38,10 @@ Requires macOS 13 or later (Apple Silicon and Intel). The Xprinter macOS driver 
 Already set up? The app recognizes it and just says so; if the printer is on Wi-Fi but missing on this Mac, one click adds it — no password needed. Changing the Wi-Fi network itself requires the USB cable, so a typo in the password can't lock you out.
 
 Tip: reserve the printer's address in your router (DHCP reservation), so it never changes.
+
+**Another Mac?** Open the app on it: it finds the printer on the network by itself, or you type the printer's address (shown in the app on the first Mac, or as `STA IP` on the self-test page) and press **Add to This Mac**. The driver is needed on that Mac too.
+
+**Label size.** In Printer Settings → Labels, type the width and height of your roll (for example 75 × 130 mm). It becomes the default paper size of the printer in macOS, so apps start with it. Change it when you load a roll of another size.
 
 **Printer Settings (⌘,)** — over USB, or over Wi-Fi once the printer is set up (no cable needed), read from the printer and applied immediately: darkness (0–15), speed (2–6 in/s), rotate 180°, mirror, reprint after an error, fine position (tear-off offset, shift, origin), printer info. A test page is printed only when you ask for it.
 
@@ -98,15 +105,22 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 
 **Проверено на:** Xprinter XP-420B (USB + Wi‑Fi, 203 dpi, 108 мм), прошивка 1.040.3552, модуль Wi‑Fi X4_V95.0.9. На других моделях Xprinter с таким же модулем Wi‑Fi программа, вероятно, тоже заработает, но это не проверялось — напишите в [Issues](../../issues), если попробуете.
 
-**Установка:** скачайте `Xprinter-Setup.zip` в [Releases](../../releases), распакуйте, перенесите в «Программы». При первом запуске: правый клик → «Открыть» → «Открыть» (программа не нотаризована). Нужны macOS 13+ и установленный драйвер Xprinter.
+**Установка:** скачайте `Xprinter-Setup.zip` в [Releases](../../releases), распакуйте, перенесите в «Программы». При первом запуске: правый клик → «Открыть» → «Открыть» (программа не нотаризована). Нужна macOS 13 или новее.
+
+**Нужен драйвер Xprinter для macOS** — в macOS его нет. Скачайте его на [xprintertech.com](https://www.xprintertech.com/) (Support → Download) и установите заранее. Подключить принтер к Wi‑Fi и менять настройки программа может и без драйвера, но для печати он нужен.
 
 **Как пользоваться:**
 
+0. Установите драйвер Xprinter (см. выше).
 1. Подключите принтер кабелем USB и включите.
 2. Выберите сеть, введите пароль, нажмите «Подключить». Принтер работает **только с 2,4 ГГц**, поэтому сети только на 5 ГГц не показаны. Список сетей macOS показывает только с разрешением на геолокацию — разрешите или выберите «Другая сеть…».
 3. Через ~30 секунд появится «Готово» — выбирайте новый принтер «(Wi-Fi)» в окне печати, кабель можно отключить.
 
 Если принтер уже настроен, программа это видит и просто сообщает об этом; если он в Wi‑Fi, но не добавлен на этот Mac — добавляет одной кнопкой, без пароля. Сменить сеть Wi‑Fi можно только по кабелю USB — так опечатка в пароле не отрежет принтер от управления.
+
+**Другой Mac?** Запустите программу на нём: она сама найдёт принтер в сети или попросит ввести его адрес (он есть в программе на первом Mac или в строке `STA IP` на тестовой странице) — и добавит его кнопкой «Добавить на этот Mac». Драйвер нужен и на нём.
+
+**Размер этикеток.** В «Настройках принтера → Этикетки» укажите ширину и высоту рулона (например, 75 × 130 мм) — это станет размером бумаги по умолчанию, и программы будут сразу печатать в нём. Сменили рулон — поменяйте размер.
 
 **Настройки принтера (⌘,)** — по USB, а после настройки и по Wi‑Fi, без кабеля: плотность, скорость, поворот, зеркальная печать, повтор после ошибки, точное положение, сведения о принтере. Тестовая страница печатается только по вашему запросу.
 

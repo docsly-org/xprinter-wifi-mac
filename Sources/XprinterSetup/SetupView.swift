@@ -136,7 +136,14 @@ struct SetupView: View {
             } footer: {
                 Group {
                     if case .failed(let message) = printer.phase {
-                        Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                            if printer.needsDriver {
+                                Link(destination: URL(string: "https://www.xprintertech.com/")!) {
+                                    Text("Download the Xprinter Driver…", bundle: .module)
+                                }
+                            }
+                        }
                     } else if !printer.addedToMac {
                         Text("Add the printer to print to it from this Mac.", bundle: .module)
                     } else if printer.usbPlugged {

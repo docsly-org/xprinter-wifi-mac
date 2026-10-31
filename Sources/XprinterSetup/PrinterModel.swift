@@ -22,9 +22,35 @@ final class PrinterModel: ObservableObject {
     @Published var settingsError: String?
     /// Bumped after a successful setup, so the view can leave the "change network" form.
     @Published var setupCompleted = 0
+    /// The last failure was a missing Xprinter driver: the view offers a download link.
+    @Published var needsDriver = false
     /// Name of the macOS printer that points at the printer's Wi-Fi address, as shown in Print dialogs.
     @Published var macPrinterName: String?
     var addedToMac: Bool { macPrinterName != nil }
+
+    /// Default label size (mm) of the Xprinter printers in macOS, nil when none is added yet.
+    @Published var labelSize: (width: Double, height: Double)?
+    @Published var labelError: String?
+
+    func loadLabelSize() async {
+        guard !Demo.isOn else { return }
+        labelSize = await Self.background {
+            CUPS.xprinterQueues().lazy.compactMap { CUPS.labelSize(queue: $0.name) }.first.map { ($0.width, $0.height) }
+        }
+    }
+
+    func setLabelSize(width: Double, height: Double) {
+        guard !Demo.isOn else { labelSize = (width, height); return }
+        Task {
+            do {
+                try await Self.background { try CUPS.setLabelSize(width: width, height: height) }
+                labelError = nil
+            } catch {
+                labelError = error.localizedDescription
+            }
+            await loadLabelSize()
+        }
+    }
 
     /// How to reach the printer; "auto" prefers USB and falls back to Wi-Fi. Saved between launches.
     @Published var preference: LinkPreference = LinkPreference(rawValue: UserDefaults.standard.string(forKey: "link") ?? "") ?? .auto {
@@ -38,7 +64,7 @@ final class PrinterModel: ObservableObject {
 
     init() {
         if Demo.isOn {
-            config = Demo.config; link = .usb; usbPlugged = true; phase = .ready
+            config = Demo.config; link = .usb; usbPlugged = true; phase = .ready; labelSize = (75, 130)
             Task { await Demo.capture(self) }
         } else {
             startPolling()
@@ -113,11 +139,16 @@ final class PrinterModel: ObservableObject {
         setupCompleted += 1
     }
 
+    private func fail(_ error: Error) {
+        needsDriver = error is CUPS.NoDriver
+        phase = .failed(error.localizedDescription)
+    }
+
     /// The printer is already on Wi-Fi: only add it to this Mac, no password needed.
     func addToMac() {
         guard !Demo.isOn, let ip = config?.wifiIP else { return }
         Task {
-            do { try await addQueue(ip: ip) } catch { phase = .failed(error.localizedDescription) }
+            do { try await addQueue(ip: ip) } catch { fail(error) }
         }
     }
 
@@ -178,7 +209,7 @@ final class PrinterModel: ObservableObject {
                 }
                 try await addQueue(ip: ip)
             } catch {
-                phase = .failed(error.localizedDescription)
+                fail(error)
             }
         }
     }

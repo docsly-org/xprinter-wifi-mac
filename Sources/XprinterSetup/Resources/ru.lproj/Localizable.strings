@@ -68,3 +68,10 @@
 "No Xprinter answers at this address." = "По этому адресу принтер Xprinter не отвечает.";
 "The address is on the printer’s self-test page (STA IP) or in this app on the Mac where the printer was set up." = "Адрес есть на тестовой странице принтера (STA IP) или в этой программе на том Mac, где принтер настраивали.";
 "Printer already on Wi-Fi? Enter Its Address…" = "Принтер уже работает по Wi‑Fi? Указать адрес…";
+"Width" = "Ширина";
+"Height" = "Высота";
+"mm" = "мм";
+"Labels" = "Этикетки";
+"Add the printer to this Mac first." = "Сначала добавьте принтер на этот Mac.";
+"The default paper size when you print from any app. Change it when you load a roll of another size." = "Размер бумаги по умолчанию при печати из любой программы. Поменяйте его, когда вставите рулон другого размера.";
+"Download the Xprinter Driver…" = "Скачать драйвер Xprinter…";

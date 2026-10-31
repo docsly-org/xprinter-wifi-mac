@@ -77,6 +77,20 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(CUPS.parseInfo("printer-info=Office printer-location=x"), "Office")
     }
 
+    func testLabelSizeInPPD() throws {
+        let ppd = try String(contentsOfFile: "/Library/Printers/PPDs/Contents/Resources/XP-420B.ppd", encoding: .isoLatin1)
+        XCTAssertEqual(LabelSize.read(ppd: ppd)?.width, 50.8)  // vendor default: 2 x 4 in
+        let once = LabelSize.apply(ppd: ppd, width: 75, height: 130)
+        let r = try XCTUnwrap(LabelSize.read(ppd: once))
+        XCTAssertEqual(r.width, 75); XCTAssertEqual(r.height, 130)
+        // applying again replaces our size instead of adding a second one
+        let twice = LabelSize.apply(ppd: once, width: 58, height: 40)
+        XCTAssertEqual(LabelSize.read(ppd: twice)?.width, 58)
+        XCTAssertEqual(twice.components(separatedBy: "*PageSize XPSetupLabel").count - 1, 1)
+        XCTAssertEqual(twice.components(separatedBy: "*PaperDimension XPSetupLabel").count - 1, 1)
+        XCTAssertTrue(twice.contains("*PageSize w4h6/"))  // vendor sizes stay
+    }
+
     func testQueueParsingAndNaming() {
         let q = CUPS.parseQueues("device for Xprinter_XP_420B: usb://Xprinter/XP-420B?serial=S\ndevice for X_WiFi: socket://1.2.3.4:9100")
         XCTAssertEqual(q.map(\.name), ["Xprinter_XP_420B", "X_WiFi"])

@@ -39,6 +39,22 @@ struct SettingsView: View {
                 } header: { Text("Printing", bundle: .module) }
 
                 Section {
+                    if let size = printer.labelSize {
+                        mm("Width", size.width, LabelSize.widthRange) { printer.setLabelSize(width: $0, height: size.height) }
+                        mm("Height", size.height, LabelSize.heightRange) { printer.setLabelSize(width: size.width, height: $0) }
+                    } else {
+                        Text("Add the printer to this Mac first.", bundle: .module).foregroundStyle(.secondary)
+                    }
+                } header: { Text("Labels", bundle: .module) }
+                  footer: {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("The default paper size when you print from any app. Change it when you load a roll of another size.", bundle: .module)
+                        if let e = printer.labelError { Text(e).foregroundStyle(.red) }
+                    }
+                    .font(.callout).foregroundStyle(.secondary)
+                }
+
+                Section {
                     DisclosureGroup(isExpanded: $showPosition) {
                         dots("Tear-off offset", c.offset) { printer.apply(XprinterCommand.offset($0)) }
                         dots("Shift horizontally", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0)) }
@@ -81,7 +97,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
             .scrollDisabled(Demo.isOn)  // screenshots: a non-scrolling form can be snapshotted
-            .onAppear { density = Double(c.density ?? 8) }
+            .onAppear { density = Double(c.density ?? 8); Task { await printer.loadLabelSize() } }
             .onChange(of: c.density) { density = Double($0 ?? 8) }
             .confirmationDialog(Text("Print a test page?", bundle: .module), isPresented: $confirmTestPage) {
                 Button { printer.printSelfTest() } label: { Text("Print", bundle: .module) }
@@ -101,6 +117,20 @@ struct SettingsView: View {
 
     private func info(_ title: String.LocalizationValue, _ value: String?) -> some View {
         LabeledContent { Text(value ?? "—").textSelection(.enabled) } label: { Text(loc(title)) }
+    }
+
+    /// Millimetre field; applies on Return or when focus leaves.
+    private func mm(_ title: String.LocalizationValue, _ value: Double, _ range: ClosedRange<Double>,
+                    set: @escaping (Double) -> Void) -> some View {
+        LabeledContent {
+            HStack(spacing: 6) {
+                TextField("", value: Binding(get: { value }, set: { set(min(max($0, range.lowerBound), range.upperBound)) }),
+                          format: .number.precision(.fractionLength(0...1)))
+                    .labelsHidden().multilineTextAlignment(.trailing).frame(width: 64)
+                    .textFieldStyle(.roundedBorder)
+                Text("mm", bundle: .module).foregroundStyle(.secondary)
+            }
+        } label: { Text(loc(title)) }
     }
 
     /// Number field with stepper, like in System Settings. Values are in dots.
