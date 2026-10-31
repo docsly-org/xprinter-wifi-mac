@@ -14,6 +14,12 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(String(decoding: XprinterCommand.offset(-5), as: UTF8.self), "OFFSET -5 dot\r\n")
     }
 
+    func testRestartIsNotFactoryReset() {
+        // vendor "Reset Printer": ESC ! exit CR LF, ESC ! R — and never ESC ! C (factory reset)
+        XCTAssertEqual(Array(XprinterCommand.restartPrinter), [27, 33] + Array("exit\r\n".utf8) + [27, 33, 82])
+        XCTAssertFalse(Array(XprinterCommand.restartPrinter).suffix(3) == [27, 33, 67])
+    }
+
     func testValidation() {
         XCTAssertThrowsError(try XprinterCommand.validate(ssid: "", password: "12345678"))
         XCTAssertThrowsError(try XprinterCommand.validate(ssid: "a\"b", password: "12345678"))

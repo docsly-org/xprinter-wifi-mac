@@ -61,6 +61,8 @@ final class PrinterModel: ObservableObject {
     /// The printer accepts a connection (or is on USB) but answers nothing: its Wi-Fi module hung mid-transfer
     /// and the printer waits for the rest. Only turning the printer off and on helps.
     @Published var notResponding = false
+    /// Printer on USB reports a Wi-Fi address, but nothing answers there: the module dropped off the network.
+    @Published var wifiDown = false
     private var recheck = true  // check the network once at launch
     nonisolated(unsafe) private static var searchedOnce = false  // touched only from findOnNetwork, one call at a time
     private var polling: Task<Void, Never>?
@@ -96,6 +98,8 @@ final class PrinterModel: ObservableObject {
                         link = .usb
                         await reload()
                         notResponding = config == nil
+                        // only opens a connection, no reply needed from the module
+                        if let ip = config?.wifiIP { wifiDown = !(await Self.background { NetworkPrinter.isReachable(ip) }) } else { wifiDown = false }
                     }
                 } else if preference == .usb {
                     if link != nil { link = nil; config = nil }
@@ -264,6 +268,23 @@ final class PrinterModel: ObservableObject {
     }
 
     func printSelfTest() { apply(XprinterCommand.selfTest) }
+
+    /// Soft restart over USB ("Reset Printer"). Settings are kept; Wi-Fi comes back about 10 s later.
+    func restartPrinter() { restart(XprinterCommand.restartPrinter, wait: 15) }
+    /// Restarts only the Wi-Fi module over USB.
+    func restartWiFi() { restart(XprinterCommand.restartWiFi, wait: 10) }
+
+    private func restart(_ command: Data, wait seconds: UInt64) {
+        guard !Demo.isOn, usbPlugged else { return }
+        Task {
+            phase = .working(loc("Restarting…"))
+            try? await Self.background { try USBPrinter.send(command) }
+            try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
+            link = nil; config = nil
+            phase = .waitingForPrinter
+            refresh(deep: true)
+        }
+    }
 
     nonisolated static func background<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {
         try await Task.detached(priority: .userInitiated) { try work() }.value

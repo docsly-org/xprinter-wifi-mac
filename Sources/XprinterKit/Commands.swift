@@ -17,6 +17,14 @@ public enum XprinterCommand {
     public static let readWiFiIP = cmd("WIFI GETIP\r\nOUT \"\(end)\"")
     public static let selfTest = cmd("SELFTEST")
 
+    /// Restarts only the Wi-Fi module; it rejoins the saved network in a few seconds. Settings are kept.
+    public static let restartWiFi = cmd("WIFI RESET")
+
+    /// Soft restart of the whole printer, the same bytes as "Reset Printer" in the vendor's tool:
+    /// ESC ! exit, then the immediate command ESC ! R, which runs even when the printer is stuck.
+    /// Settings are kept (checked on an XP-420B). Never confuse it with ESC ! C — that is FACTORY RESET.
+    public static let restartPrinter = Data([27, 33]) + Data("exit\r\n".utf8) + Data([27, 33, 82])
+
     public static func density(_ n: Int) -> Data { cmd("DENSITY \(min(max(n, 0), 15))") }
     public static func speed(_ n: Int) -> Data { cmd("SPEED \(min(max(n, 2), 6))") }
     public static func direction(rotated: Bool, mirrored: Bool) -> Data { cmd("DIRECTION \(rotated ? 1 : 0),\(mirrored ? 1 : 0)") }

@@ -78,3 +78,9 @@
 "Not responding" = "Не отвечает";
 "The printer does not answer. Turn it off, wait 5 seconds and turn it on again." = "Принтер не отвечает. Выключите его, подождите 5 секунд и включите снова.";
 "Check Again" = "Проверить снова";
+"Restarting…" = "Перезапускаю…";
+"Wi-Fi module is offline" = "Модуль Wi‑Fi не в сети";
+"The printer’s Wi-Fi module sometimes hangs and stops the printer. A restart fixes it; settings are kept." = "Модуль Wi‑Fi принтера иногда зависает и останавливает принтер. Перезапуск это исправляет, настройки сохранятся.";
+"Restart Printer" = "Перезапустить принтер";
+"The printer is on USB, but its Wi-Fi module dropped off the network. Reconnecting takes a few seconds; settings are kept." = "Принтер подключён по USB, но его модуль Wi‑Fi выпал из сети. Переподключение займёт несколько секунд, настройки сохранятся.";
+"Reconnect Wi-Fi" = "Переподключить Wi‑Fi";

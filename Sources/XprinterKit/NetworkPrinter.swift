@@ -2,11 +2,11 @@ import Foundation
 
 /// Two-way talk with the printer over Wi-Fi: the same TSPL commands on TCP port 9100, replies on the same socket.
 ///
-/// Firmware bug (XP-420B, Wi-Fi module X4_V95.0.9): after power-on the module passes only about nine replies
-/// from the printer to the network (a reply = an ALLCONFIG report, ~2.5 KB); then it hangs and the printer
-/// stops answering on USB too until it is turned off and on. Data sent *to* the printer is not affected:
-/// 20 write-only sessions in a row were fine, so normal printing over Wi-Fi is safe.
-/// Callers therefore ask the printer for a reply over Wi-Fi as rarely as possible.
+/// Firmware limitation (XP-420B, Wi-Fi module X4_V95.0.9): about 30-35 minutes after the module starts it
+/// either drops off the network or hangs mid-transfer, and then the printer stops answering on USB too.
+/// Seen four times, with and without traffic. `WIFI RESET` (module dropped) or the vendor's "Reset Printer"
+/// (`XprinterCommand.restartPrinter`, printer stuck) over USB fix it; nothing fixes it over the network.
+/// Callers ask for replies over Wi-Fi as rarely as possible.
 public enum NetworkPrinter {
     public struct Unreachable: LocalizedError {
         public var errorDescription: String? { String(localized: "The printer does not answer over Wi-Fi.", bundle: .module) }

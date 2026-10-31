@@ -35,7 +35,7 @@ Requires macOS 13 or later (Apple Silicon and Intel).
    The printer supports **2.4 GHz** networks only, so 5 GHz-only networks are not listed. macOS shows network names only to apps with Location access — allow it when asked, or choose **Other Network…** and type the name.
 3. Wait about 30 seconds. When you see **All set**, choose the new “… (Wi-Fi)” printer in any Print dialog and unplug the cable.
 
-Already set up? The app recognizes it and just says so; if the printer is on Wi-Fi but missing on this Mac, one click adds it — no password needed. Changing the Wi-Fi network itself requires the USB cable, so a typo in the password can't lock you out.
+Already set up? The app recognizes it and just says so; if the printer's Wi-Fi module dropped off the network or hung, it offers **Reconnect Wi-Fi** or **Restart Printer** (see the known limitation below); if the printer is on Wi-Fi but missing on this Mac, one click adds it — no password needed. Changing the Wi-Fi network itself requires the USB cable, so a typo in the password can't lock you out.
 
 Tip: reserve the printer's address in your router (DHCP reservation), so it never changes.
 
@@ -47,15 +47,28 @@ Tip: reserve the printer's address in your router (DHCP reservation), so it neve
 
 Deliberately **not** included, to keep the printer safe: factory/head calibration commands, factory reset (it would also erase Wi-Fi settings), firmware and file operations, changing the printer's own access point, and paper-sensor calibration (feeds several labels; may be added after testing).
 
-## Known printer limitation: Wi-Fi replies
+## Known printer limitation: Wi-Fi stays healthy for about 30 minutes
 
-The Wi-Fi module of the XP-420B (X4_V95.0.9) has a firmware bug, found while building this app: after power-on it passes only about **nine replies** from the printer back to the network (a reply is, for example, the printer's settings report). Then it hangs, and the printer stops answering on USB too, with the blue light still on, until it is turned off and on.
+Found while building this app, on an XP-420B with Wi-Fi module X4_V95.0.9 and a Xiaomi router. Repeated four times, with and without traffic:
 
-**Printing is not affected**: print jobs only send data to the printer — 20 such sessions in a row worked fine. It is not a driver problem either: the tests talked to the printer directly, without macOS printing.
+- About **30–35 minutes after the Wi-Fi module starts**, it goes bad on its own: it either **drops off the network** (no ping), or keeps the connection but **hangs mid-transfer** — and then the whole printer stops answering, even on USB, with the blue light still on.
+- At that point printing over Wi-Fi fails too. Printing over **USB is not affected** while the printer itself is not stuck.
+- It is **not the driver** (the tests talked to the printer directly) and **not load** (it happens after 30 minutes of complete silence too).
+- A guess, not verified: many cheap Wi-Fi modules break when the router renews its encryption keys; the timing fits.
 
-What the app does about it: over Wi-Fi it reads the printer's settings once, when it finds the printer, and otherwise only checks that the printer is there (no reply needed). Changing settings over Wi-Fi sends the value without reading it back. Over USB there is no such limit. If the printer stops answering, the app says so and suggests turning it off and on.
+**What helps, all verified on the printer, all keep the settings:**
 
-Tip: change printer settings over USB when you can.
+| Problem | Fix |
+|---|---|
+| Dropped off the network | **Reconnect Wi-Fi** in the app (sends `WIFI RESET` over USB) — back in ~6 s |
+| Printer stuck, no answer even on USB | **Restart Printer** in the app (the vendor's "Reset Printer": `ESC ! exit`, `ESC ! R`) — back in ~6 s |
+| No cable at hand | Turn the printer off and on |
+
+Over the network the module cannot be fixed: a broken module does not pass the fix either. The app also asks the printer for replies over Wi-Fi as rarely as possible.
+
+**If you rely on Wi-Fi printing**, try on your router (not verified yet): a separate 2.4 GHz network name, a fixed channel (1, 6 or 11), band steering / "smart connect" off, and a longer group key update interval if the router has that setting. If you find a setting that keeps the printer alive longer than 30 minutes, please open an issue.
+
+**Never** send `ESC ! C`: in the vendor's tool that is "Factory Default" and erases all settings, Wi-Fi included.
 
 ## The problem this solves
 
@@ -136,6 +149,8 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 
 **Типичные проблемы, которые решает программа:** XP-420B не подключается к Wi‑Fi, видна только сеть `XP-420B` (пароль `12345678`); не открывается `10.10.100.1`; на тестовой странице `STA IP: 0.0.0.0`; утилита Xprinter Diagnostic Tool работает только на Windows; приложение Print Label не находит принтер; как настроить Wi‑Fi принтера этикеток Xprinter на MacBook.
 
-**Известное ограничение принтера.** В прошивке модуля Wi‑Fi XP-420B (X4_V95.0.9) есть ошибка, которую мы нашли при разработке: после включения он передаёт обратно в сеть только около **девяти ответов** принтера (например, отчётов о настройках), а потом зависает — и принтер перестаёт отвечать даже по USB, хотя синий индикатор горит; помогает только выключить и включить. **Печать это не затрагивает**: задания только отправляют данные в принтер — 20 таких сеансов подряд прошли без сбоев. Драйвер тут ни при чём — тесты шли напрямую, без него. Программа поэтому по Wi‑Fi читает настройки один раз, а дальше лишь проверяет, что принтер на месте; если он перестал отвечать — подскажет перезагрузить. Настройки по возможности меняйте по USB.
+**Известное ограничение принтера: Wi‑Fi работает около 30 минут.** Выяснено при разработке на XP-420B с модулем X4_V95.0.9 и роутером Xiaomi, повторено 4 раза — с нагрузкой и без. Примерно через **30–35 минут после запуска модуля Wi‑Fi** он сам начинает сбоить: либо **выпадает из сети**, либо **зависает посреди передачи** — и тогда весь принтер перестаёт отвечать, даже по USB, хотя синий индикатор горит. Печать по Wi‑Fi в этот момент тоже не проходит; **печать по USB это не затрагивает**. Драйвер и нагрузка ни при чём (сбой случается и после 30 минут полной тишины). Догадка, не проверенная: модуль ломается, когда роутер обновляет ключи шифрования.
+
+Что помогает (проверено, настройки сохраняются): **«Переподключить Wi‑Fi»** в программе, если принтер выпал из сети (`WIFI RESET` по USB, ~6 с); **«Перезапустить принтер»**, если он завис совсем (как кнопка «Reset Printer» в утилите Xprinter: `ESC ! exit`, `ESC ! R`, ~6 с); без кабеля — выключить и включить. По сети испорченный модуль не вылечить. Если печатаете по Wi‑Fi постоянно, попробуйте в роутере (пока не проверено): отдельную сеть 2,4 ГГц, фиксированный канал (1, 6 или 11), выключить «умное» переключение диапазонов, увеличить интервал обновления группового ключа. Нашли настройку, при которой принтер живёт дольше 30 минут, — напишите в Issues. **Никогда** не отправляйте `ESC ! C` — это сброс к заводским настройкам.
 
 **Отказ от ответственности.** Программа бесплатная и неофициальная, не связана с компанией Xprinter. Она предоставляется **«как есть», без каких-либо гарантий** — вы используете её на свой страх и риск. Авторы не несут ответственности за возможный ущерб принтеру, данным или чему-либо ещё. Лицензия — [MIT](LICENSE).

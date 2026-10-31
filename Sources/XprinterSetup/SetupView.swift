@@ -63,6 +63,8 @@ struct SetupView: View {
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
         } else if printer.config?.wifiIP == nil {
             dot(.secondary) { Text("Not on Wi-Fi", bundle: .module) }
+        } else if printer.wifiDown {
+            dot(.orange) { Text("Wi-Fi module is offline", bundle: .module) }
         } else if printer.addedToMac {
             dot(.green) { Text("Ready to print over Wi-Fi", bundle: .module) }
         } else {
@@ -81,9 +83,16 @@ struct SetupView: View {
         switch printer.phase {
         case .waitingForPrinter where printer.notResponding:
             VStack(spacing: 12) {
-                Text("The printer does not answer. Turn it off, wait 5 seconds and turn it on again.", bundle: .module)
-                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                Button { printer.refresh(deep: true) } label: { Text("Check Again", bundle: .module) }
+                if printer.usbPlugged {
+                    Text("The printer’s Wi-Fi module sometimes hangs and stops the printer. A restart fixes it; settings are kept.", bundle: .module)
+                        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Button { printer.restartPrinter() } label: { Text("Restart Printer", bundle: .module) }
+                        .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                } else {
+                    Text("The printer does not answer. Turn it off, wait 5 seconds and turn it on again.", bundle: .module)
+                        .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    Button { printer.refresh(deep: true) } label: { Text("Check Again", bundle: .module) }
+                }
             }
             .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 28)
 
@@ -145,7 +154,9 @@ struct SetupView: View {
                 } label: { Text("Connected via", bundle: .module) }
             } footer: {
                 Group {
-                    if case .failed(let message) = printer.phase {
+                    if printer.wifiDown {
+                        Text("The printer is on USB, but its Wi-Fi module dropped off the network. Reconnecting takes a few seconds; settings are kept.", bundle: .module)
+                    } else if case .failed(let message) = printer.phase {
                         VStack(alignment: .leading, spacing: 4) {
                             Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
                             if printer.needsDriver {
@@ -173,7 +184,10 @@ struct SetupView: View {
                     Button { printer.phase = .ready; changeNetwork = true } label: { Text("Change Network…", bundle: .module) }
                 }
                 Spacer()
-                if !printer.addedToMac {
+                if printer.wifiDown {
+                    Button { printer.restartWiFi() } label: { Text("Reconnect Wi-Fi", bundle: .module) }
+                        .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                } else if !printer.addedToMac {
                     Button { printer.addToMac() } label: { Text("Add to This Mac", bundle: .module) }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 }

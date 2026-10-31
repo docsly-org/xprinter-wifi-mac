@@ -8,8 +8,8 @@
 	<key>CFBundleName</key><string>Xprinter Setup</string>
 	<key>CFBundleDisplayName</key><string>Xprinter Setup</string>
 	<key>CFBundlePackageType</key><string>APPL</string>
-	<key>CFBundleShortVersionString</key><string>1.1</string>
-	<key>CFBundleVersion</key><string>2</string>
+	<key>CFBundleShortVersionString</key><string>1.3</string>
+	<key>CFBundleVersion</key><string>4</string>
 	<key>CFBundleDevelopmentRegion</key><string>en</string>
 	<key>CFBundleLocalizations</key><array><string>en</string><string>ru</string></array>
 	<key>LSMinimumSystemVersion</key><string>13.0</string>
