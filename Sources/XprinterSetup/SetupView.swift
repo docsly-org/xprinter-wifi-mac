@@ -11,6 +11,9 @@ struct SetupView: View {
     @State private var password = ""
     @FocusState private var passwordFocused: Bool
     @State private var changeNetwork = false
+    @State private var typingAddress = false
+    @State private var address = ""
+    @State private var addressFailed = false
     static let other = "\u{0}other"  // can't collide with a real SSID
 
     var body: some View {
@@ -75,7 +78,28 @@ struct SetupView: View {
     @ViewBuilder private var content: some View {
         switch printer.phase {
         case .waitingForPrinter:
-            ProgressView().controlSize(.small).padding(.vertical, 28)
+            VStack(spacing: 14) {
+                ProgressView().controlSize(.small)
+                if typingAddress {
+                    HStack {
+                        TextField(text: $address, prompt: Text(verbatim: "192.168.1.50")) { Text("IP Address", bundle: .module) }
+                            .labelsHidden().textFieldStyle(.roundedBorder).frame(width: 160)
+                            .onSubmit(useAddress)
+                        Button(action: useAddress) { Text("Connect", bundle: .module) }
+                            .disabled(address.isEmpty)
+                    }
+                    if addressFailed {
+                        Text("No Xprinter answers at this address.", bundle: .module).font(.callout).foregroundStyle(.red)
+                    } else {
+                        Text("The address is on the printer’s self-test page (STA IP) or in this app on the Mac where the printer was set up.", bundle: .module)
+                            .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                    }
+                } else {
+                    Button { typingAddress = true } label: { Text("Printer already on Wi-Fi? Enter Its Address…", bundle: .module) }
+                        .buttonStyle(.link)
+                }
+            }
+            .padding(.horizontal, 24).padding(.top, 20).padding(.bottom, 28)
 
         case .working(let step):
             VStack(spacing: 12) {
@@ -85,12 +109,17 @@ struct SetupView: View {
             .padding(.vertical, 36)
 
         case .ready, .failed:
-            if let ip = printer.config?.wifiIP, !changeNetwork, printer.phase == .ready {
+            if let ip = printer.config?.wifiIP, !changeNetwork {
                 status(ip: ip)
             } else {
                 form
             }
         }
+    }
+
+    private func useAddress() {
+        addressFailed = false
+        Task { addressFailed = !(await printer.useAddress(address)) }
     }
 
     /// Printer on Wi-Fi: facts about it, nothing to type.
@@ -99,16 +128,18 @@ struct SetupView: View {
             Section {
                 LabeledContent { Text(ip).textSelection(.enabled) } label: { Text("IP Address", bundle: .module) }
                 LabeledContent {
-                    printer.addedToMac ? Text(printer.wifiQueueTitle) : Text("Not added", bundle: .module)
+                    printer.macPrinterName.map { Text(verbatim: $0) } ?? Text("Not added", bundle: .module)
                 } label: { Text("Printer in macOS", bundle: .module) }
                 LabeledContent {
-                    printer.link == .usb ? Text("USB") : Text("Wi-Fi")
+                    Text(verbatim: printer.link == .usb ? "USB" : "Wi-Fi")
                 } label: { Text("Connected via", bundle: .module) }
             } footer: {
                 Group {
-                    if !printer.addedToMac {
+                    if case .failed(let message) = printer.phase {
+                        Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                    } else if !printer.addedToMac {
                         Text("Add the printer to print to it from this Mac.", bundle: .module)
-                    } else if printer.link == .usb {
+                    } else if printer.usbPlugged {
                         Text("Choose this printer in the Print dialog of any app. You can unplug the USB cable.", bundle: .module)
                     } else {
                         Text("Choose this printer in the Print dialog of any app. To change its Wi-Fi network, connect the USB cable.", bundle: .module)
@@ -121,13 +152,11 @@ struct SetupView: View {
         .scrollDisabled(true)
         .safeAreaInset(edge: .bottom) {
             HStack {
-                if printer.link == .usb {
-                    Button { changeNetwork = true } label: { Text("Change Network…", bundle: .module) }
+                if printer.usbPlugged {
+                    Button { changeNetwork = true; printer.phase = .ready } label: { Text("Change Network…", bundle: .module) }
                 }
                 Spacer()
-                if printer.addedToMac {
-                    Button { openWindow(id: "settings") } label: { Text("Printer Settings…", bundle: .module) }
-                } else {
+                if !printer.addedToMac {
                     Button { printer.addToMac() } label: { Text("Add to This Mac", bundle: .module) }
                         .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                 }

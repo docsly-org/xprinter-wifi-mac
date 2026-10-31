@@ -65,3 +65,6 @@
 "Choose this printer in the Print dialog of any app. To change its Wi-Fi network, connect the USB cable." = "Выбирайте этот принтер в окне печати любой программы. Чтобы сменить сеть Wi‑Fi, подключите кабель USB.";
 "Change Network…" = "Сменить сеть…";
 "Cancel" = "Отменить";
+"No Xprinter answers at this address." = "По этому адресу принтер Xprinter не отвечает.";
+"The address is on the printer’s self-test page (STA IP) or in this app on the Mac where the printer was set up." = "Адрес есть на тестовой странице принтера (STA IP) или в этой программе на том Mac, где принтер настраивали.";
+"Printer already on Wi-Fi? Enter Its Address…" = "Принтер уже работает по Wi‑Fi? Указать адрес…";

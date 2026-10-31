@@ -38,7 +38,7 @@ enum Demo {
         await save(window: loc("Printer Settings"), as: "settings-\(lang)")
         await save(window: loc("Xprinter Setup"), as: "setup-\(lang)")
         model.config = configWith(ip: "192.168.1.50")
-        model.addedToMac = true
+        model.macPrinterName = "Xprinter XP-420B (Wi-Fi)"
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         await save(window: loc("Xprinter Setup"), as: "done-\(lang)")
         NSApp.terminate(nil)

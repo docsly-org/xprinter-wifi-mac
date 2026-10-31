@@ -47,10 +47,15 @@ public enum PrinterLink: Equatable, Sendable {
 
 /// High-level operations over USB or Wi-Fi.
 public enum Xprinter {
+    /// One exchange at a time: the printer runs commands in order, and its Wi-Fi module
+    /// hangs when several connections or queries overlap.
+    static let lock = NSLock()
+
     static func exchange(_ link: PrinterLink, _ data: Data, until end: String? = nil, timeout: TimeInterval = 3) throws -> String {
+        lock.lock(); defer { lock.unlock() }
         switch link {
-        case .usb: try USBPrinter.exchange(data, until: end, timeout: timeout)
-        case .network(let host): try NetworkPrinter.exchange(host: host, data, until: end, timeout: timeout)
+        case .usb: return try USBPrinter.exchange(data, until: end, timeout: timeout)
+        case .network(let host): return try NetworkPrinter.exchange(host: host, data, until: end, timeout: timeout)
         }
     }
 

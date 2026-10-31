@@ -19,6 +19,19 @@ public enum CUPS {
 
     public static func queues() -> [PrinterQueue] { parseQueues((try? run("/usr/bin/lpstat", ["-v"])) ?? "") }
 
+    /// The name shown in Print dialogs ("printer-info"), e.g. "Xprinter XP-420B (Wi-Fi)".
+    public static func displayName(of queue: String) -> String {
+        parseInfo((try? run("/usr/bin/lpoptions", ["-p", queue])) ?? "") ?? queue.replacingOccurrences(of: "_", with: " ")
+    }
+
+    /// `lpoptions` prints "printer-info='Some Name'" or "printer-info=Name".
+    public static func parseInfo(_ options: String) -> String? {
+        guard let r = options.range(of: "printer-info=") else { return nil }
+        let rest = options[r.upperBound...]
+        if rest.first == "'" { return rest.dropFirst().prefix { $0 != "'" }.description }
+        return rest.prefix { $0 != " " }.description
+    }
+
     /// Addresses of Xprinter Wi-Fi printers added to macOS ("socket://a.b.c.d:9100").
     public static func xprinterNetworkHosts() -> [String] {
         queues().compactMap { q in

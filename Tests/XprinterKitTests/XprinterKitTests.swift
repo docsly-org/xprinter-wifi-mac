@@ -61,6 +61,22 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertNil(PrinterConfig.okValue("garbage"))
     }
 
+    func testDiscoveryReply() {
+        // real reply of an XP-420B (address changed to 192.168.1.50)
+        var r = [UInt8](repeating: 0, count: 116)
+        r[0...1] = [0, 32]
+        r[44..<48] = [192, 168, 1, 50]
+        r[52..<59] = ArraySlice("XP-420B".utf8)
+        XCTAssertEqual(Discovery.parse(r), Discovery.Found(ip: "192.168.1.50", name: "XP-420B"))
+        XCTAssertNil(Discovery.parse(Array(r.prefix(40))))
+    }
+
+    func testPrinterInfo() {
+        XCTAssertEqual(CUPS.parseInfo("device-uri=socket://1.2.3.4:9100 printer-info='Xprinter XP-420B (Wi-Fi)' printer-is-shared=false"),
+                       "Xprinter XP-420B (Wi-Fi)")
+        XCTAssertEqual(CUPS.parseInfo("printer-info=Office printer-location=x"), "Office")
+    }
+
     func testQueueParsingAndNaming() {
         let q = CUPS.parseQueues("device for Xprinter_XP_420B: usb://Xprinter/XP-420B?serial=S\ndevice for X_WiFi: socket://1.2.3.4:9100")
         XCTAssertEqual(q.map(\.name), ["Xprinter_XP_420B", "X_WiFi"])
@@ -86,5 +102,6 @@ final class XprinterKitTests: XCTestCase {
         let c = try Xprinter.config(via: .network(ip))
         XCTAssertEqual(c.wifiIP, ip)
         print("LIVE-NET model=\(c.model ?? "-") density=\(c.density ?? -1) speed=\(c.speed ?? -1)")
+        print("LIVE-DISCOVERY \(Discovery.search())")  // best effort: some Wi-Fi setups drop the broadcast
     }
 }
