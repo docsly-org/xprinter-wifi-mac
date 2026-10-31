@@ -10,12 +10,6 @@
 "The printer could not join “%@”. Check the password and make sure the network is 2.4 GHz." = "Принтер не смог подключиться к «%@». Проверьте пароль и что сеть работает на 2,4 ГГц.";
 "Adding the printer to macOS…" = "Добавляю принтер в macOS…";
 
-"Connect the printer with a USB cable and turn it on." = "Подключите принтер кабелем USB и включите его.";
-"On Wi-Fi · %@" = "В сети Wi‑Fi · %@";
-"Connected over USB · not on Wi-Fi yet" = "Подключён по USB · ещё не в сети Wi‑Fi";
-"All set" = "Готово";
-"Choose “%@” in any Print dialog. The printer’s address is %@. You can unplug the USB cable." = "Выбирайте «%@» в окне печати. Адрес принтера — %@. Кабель USB можно отключить.";
-"Done" = "Готово";
 "Network" = "Сеть";
 "Other Network…" = "Другая сеть…";
 "Network name" = "Название сети";
@@ -37,7 +31,6 @@
 "Shift vertically" = "Сдвиг по вертикали";
 "Origin X" = "Начало по X";
 "Origin Y" = "Начало по Y";
-"In dots: 8 dots = 1 mm." = "В точках: 8 точек = 1 мм.";
 "Model" = "Модель";
 "Firmware" = "Прошивка";
 "Wi-Fi address" = "Адрес в Wi‑Fi";
@@ -49,16 +42,10 @@
 "Print a test page?" = "Напечатать тестовую страницу?";
 "Print" = "Напечатать";
 "The page lists the printer’s settings and uses about one label." = "На странице будут настройки принтера. Уйдёт примерно одна этикетка.";
-"Connect the printer with a USB cable to change its settings." = "Чтобы изменить настройки, подключите принтер кабелем USB.";
 "Required" = "Обязательно";
 "Values are in dots: 8 dots = 1 mm." = "Значения в точках: 8 точек = 1 мм.";
-"The printer works over Wi-Fi" = "Принтер работает по Wi‑Fi";
-"Choose “%@” in any Print dialog." = "Выбирайте «%@» в окне печати.";
-"The printer is on Wi-Fi but not added to this Mac yet." = "Принтер подключён к Wi‑Fi, но ещё не добавлен на этот Mac.";
 "Add to This Mac" = "Добавить на этот Mac";
-"Connect to Another Network…" = "Подключить к другой сети…";
 "To change the Wi-Fi network, connect the printer with a USB cable." = "Чтобы сменить сеть Wi‑Fi, подключите принтер кабелем USB.";
-"Connected over Wi-Fi. To change the network, connect the USB cable." = "Управление по Wi‑Fi. Чтобы сменить сеть, подключите кабель USB.";
 "Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi." = "Подключите принтер кабелем USB или включите его, если он уже настроен на Wi‑Fi.";
 "Automatically" = "Автоматически";
 "USB only" = "Только USB";
@@ -66,3 +53,15 @@
 "Connection" = "Подключение";
 "Now connected over USB." = "Сейчас по USB.";
 "Now connected over Wi-Fi (%@)." = "Сейчас по Wi‑Fi (%@).";
+"Not on Wi-Fi" = "Не подключён к Wi‑Fi";
+"Ready to print over Wi-Fi" = "Готов к печати по Wi‑Fi";
+"On Wi-Fi, not added to this Mac" = "В сети Wi‑Fi, не добавлен на этот Mac";
+"IP Address" = "IP-адрес";
+"Not added" = "Не добавлен";
+"Printer in macOS" = "Принтер в macOS";
+"Connected via" = "Подключение";
+"Add the printer to print to it from this Mac." = "Добавьте принтер, чтобы печатать на нём с этого Mac.";
+"Choose this printer in the Print dialog of any app. You can unplug the USB cable." = "Выбирайте этот принтер в окне печати любой программы. Кабель USB можно отключить.";
+"Choose this printer in the Print dialog of any app. To change its Wi-Fi network, connect the USB cable." = "Выбирайте этот принтер в окне печати любой программы. Чтобы сменить сеть Wi‑Fi, подключите кабель USB.";
+"Change Network…" = "Сменить сеть…";
+"Cancel" = "Отменить";

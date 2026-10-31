@@ -29,6 +29,7 @@ struct SetupView: View {
             wifi.scan()
             if Demo.isOn { openWindow(id: "settings") }
         }
+        .onChange(of: printer.phase) { if $0 == .ready { changeNetwork = false } }
         .onChange(of: choice) {
             ssid = $0 == Self.other ? "" : $0
             if $0 != Self.other { passwordFocused = true }
@@ -40,22 +41,34 @@ struct SetupView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 4) {
             Image(nsImage: NSApp.applicationIconImage)
-                .resizable().frame(width: 72, height: 72)
+                .resizable().frame(width: 64, height: 64)
+                .padding(.bottom, 4)
             Text(printer.config?.model.map { "Xprinter \($0)" } ?? "Xprinter")
-                .font(.title2.weight(.semibold))
+                .font(.title3.weight(.semibold))
             statusLine.font(.callout).foregroundStyle(.secondary)
         }
     }
 
+    /// One calm line with a colored dot, like the status of a device in System Settings.
     @ViewBuilder private var statusLine: some View {
         if printer.config == nil {
             Text("Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi.", bundle: .module)
-        } else if let ip = printer.config?.wifiIP {
-            Label { Text("On Wi-Fi · \(ip)", bundle: .module) } icon: { Image(systemName: "wifi") }
+                .multilineTextAlignment(.center).padding(.horizontal, 32)
+        } else if printer.config?.wifiIP == nil {
+            dot(.secondary) { Text("Not on Wi-Fi", bundle: .module) }
+        } else if printer.addedToMac {
+            dot(.green) { Text("Ready to print over Wi-Fi", bundle: .module) }
         } else {
-            Text("Connected over USB · not on Wi-Fi yet", bundle: .module)
+            dot(.orange) { Text("On Wi-Fi, not added to this Mac", bundle: .module) }
+        }
+    }
+
+    private func dot(_ color: Color, _ text: () -> Text) -> some View {
+        HStack(spacing: 6) {
+            Circle().fill(color).frame(width: 8, height: 8)
+            text()
         }
     }
 
@@ -66,54 +79,61 @@ struct SetupView: View {
 
         case .working(let step):
             VStack(spacing: 12) {
-                ProgressView()
-                Text(step).foregroundStyle(.secondary)
+                ProgressView().controlSize(.small)
+                Text(step).font(.callout).foregroundStyle(.secondary)
             }
-            .padding(.vertical, 32)
-
-        case .done(let queue, let ip):
-            VStack(spacing: 10) {
-                Image(systemName: "checkmark.circle.fill").font(.system(size: 40)).foregroundStyle(.green)
-                Text("All set", bundle: .module).font(.headline)
-                Text("Choose “\(queue)” in any Print dialog. The printer’s address is \(ip). You can unplug the USB cable.", bundle: .module)
-                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                Button { changeNetwork = false; printer.phase = .ready } label: { Text("Done", bundle: .module) }
-                    .keyboardShortcut(.defaultAction).padding(.top, 6)
-            }
-            .padding(24)
+            .padding(.vertical, 36)
 
         case .ready, .failed:
             if let ip = printer.config?.wifiIP, !changeNetwork, printer.phase == .ready {
-                onWiFi(ip: ip)
+                status(ip: ip)
             } else {
                 form
             }
         }
     }
 
-    /// Printer already on Wi-Fi: nothing to type. Either all is set, or one click adds it to macOS.
-    private func onWiFi(ip: String) -> some View {
-        VStack(spacing: 10) {
-            if printer.addedToMac {
-                Image(systemName: "checkmark.circle.fill").font(.system(size: 40)).foregroundStyle(.green)
-                Text("The printer works over Wi-Fi", bundle: .module).font(.headline)
-                Text("Choose “\(printer.wifiQueueTitle)” in any Print dialog.", bundle: .module)
-                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
-            } else {
-                Text("The printer is on Wi-Fi but not added to this Mac yet.", bundle: .module)
-                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                Button { printer.addToMac() } label: { Text("Add to This Mac", bundle: .module).frame(maxWidth: .infinity) }
-                    .controlSize(.large).buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
-            }
-            if printer.link == .usb {
-                Button { changeNetwork = true } label: { Text("Connect to Another Network…", bundle: .module) }
-                    .buttonStyle(.link).padding(.top, 6)
-            } else {
-                Text("Connected over Wi-Fi. To change the network, connect the USB cable.", bundle: .module)
-                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 6)
+    /// Printer on Wi-Fi: facts about it, nothing to type.
+    private func status(ip: String) -> some View {
+        Form {
+            Section {
+                LabeledContent { Text(ip).textSelection(.enabled) } label: { Text("IP Address", bundle: .module) }
+                LabeledContent {
+                    printer.addedToMac ? Text(printer.wifiQueueTitle) : Text("Not added", bundle: .module)
+                } label: { Text("Printer in macOS", bundle: .module) }
+                LabeledContent {
+                    printer.link == .usb ? Text("USB") : Text("Wi-Fi")
+                } label: { Text("Connected via", bundle: .module) }
+            } footer: {
+                Group {
+                    if !printer.addedToMac {
+                        Text("Add the printer to print to it from this Mac.", bundle: .module)
+                    } else if printer.link == .usb {
+                        Text("Choose this printer in the Print dialog of any app. You can unplug the USB cable.", bundle: .module)
+                    } else {
+                        Text("Choose this printer in the Print dialog of any app. To change its Wi-Fi network, connect the USB cable.", bundle: .module)
+                    }
+                }
+                .font(.callout).foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 24)
+        .formStyle(.grouped)
+        .scrollDisabled(true)
+        .safeAreaInset(edge: .bottom) {
+            HStack {
+                if printer.link == .usb {
+                    Button { changeNetwork = true } label: { Text("Change Network…", bundle: .module) }
+                }
+                Spacer()
+                if printer.addedToMac {
+                    Button { openWindow(id: "settings") } label: { Text("Printer Settings…", bundle: .module) }
+                } else {
+                    Button { printer.addToMac() } label: { Text("Add to This Mac", bundle: .module) }
+                        .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                }
+            }
+            .padding([.horizontal, .bottom], 20)
+        }
     }
 
     private var form: some View {
@@ -145,13 +165,17 @@ struct SetupView: View {
         .formStyle(.grouped)
         .scrollDisabled(true)
         .safeAreaInset(edge: .bottom) {
-            Button { printer.connect(ssid: ssid, password: password) } label: {
-                Text("Connect", bundle: .module).frame(maxWidth: .infinity)
+            HStack {
+                Spacer()
+                if changeNetwork {
+                    Button { changeNetwork = false; printer.phase = .ready } label: { Text("Cancel", bundle: .module) }
+                        .keyboardShortcut(.cancelAction)
+                }
+                Button { printer.connect(ssid: ssid, password: password) } label: { Text("Connect", bundle: .module) }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(printer.config == nil || ssid.isEmpty)
             }
-            .controlSize(.large)
-            .buttonStyle(.borderedProminent)
-            .keyboardShortcut(.defaultAction)
-            .disabled(printer.config == nil || ssid.isEmpty)
             .padding([.horizontal, .bottom], 20)
         }
     }

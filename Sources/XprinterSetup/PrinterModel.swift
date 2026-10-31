@@ -10,7 +10,6 @@ final class PrinterModel: ObservableObject {
         case waitingForPrinter
         case ready
         case working(String)
-        case done(queue: String, ip: String)
         case failed(String)
     }
 
@@ -95,7 +94,7 @@ final class PrinterModel: ObservableObject {
                 phase = .working(loc("Adding the printer to macOS…"))
                 try await Self.background { try CUPS.addOrUpdateWiFiQueue(model: model, ip: ip) }
                 await reload()
-                phase = .done(queue: wifiQueueTitle, ip: ip)
+                phase = .ready
             } catch {
                 phase = .failed(error.localizedDescription)
             }
@@ -139,9 +138,10 @@ final class PrinterModel: ObservableObject {
                 phase = .working(loc("Adding the printer to macOS…"))
                 let model = config?.model ?? "Printer"
                 let queue = try await Self.background { try CUPS.addOrUpdateWiFiQueue(model: model, ip: ip) }
-                await reload()
                 _ = queue
-                phase = .done(queue: wifiQueueTitle, ip: ip)
+                link = .usb
+                await reload()
+                phase = .ready
             } catch {
                 phase = .failed(error.localizedDescription)
             }
