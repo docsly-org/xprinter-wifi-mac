@@ -67,6 +67,10 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(c.density, 12)
         XCTAssertEqual(c.mirrored, true)
         XCTAssertEqual(c.speed, 6)  // untouched values stay
+        // the exact strings the settings screen writes over Wi-Fi parse like the printer's own report
+        let w = PrinterConfig(report: report).with(["Speed": "4 Inch", "Direction": "1", "Reprint": "OFF", "Offset": "-2", "Shift Y": "3"])
+        XCTAssertEqual(w.speed, 4); XCTAssertEqual(w.rotated, true); XCTAssertEqual(w.reprint, false)
+        XCTAssertEqual(w.offset, -2); XCTAssertEqual(w.shiftY, 3)
     }
 
     func testOkReply() {

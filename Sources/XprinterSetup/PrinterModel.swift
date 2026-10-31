@@ -104,7 +104,9 @@ final class PrinterModel: ObservableObject {
                 } else if preference == .usb {
                     if link != nil { link = nil; config = nil }
                     notResponding = false
+                    wifiDown = false
                 } else if link == .usb || recheck {
+                    wifiDown = false  // only known (and fixable) with the cable
                     if case .network(let host)? = link, config != nil, !deepCheck {
                         let there = await Self.background { NetworkPrinter.isReachable(host) }
                         if !there { link = nil; config = nil }
@@ -278,7 +280,12 @@ final class PrinterModel: ObservableObject {
         guard !Demo.isOn, usbPlugged else { return }
         Task {
             phase = .working(loc("Restarting…"))
-            try? await Self.background { try USBPrinter.send(command) }
+            do {
+                try await Self.background { try USBPrinter.send(command) }
+            } catch {
+                phase = .failed(error.localizedDescription)
+                return
+            }
             try? await Task.sleep(nanoseconds: seconds * 1_000_000_000)
             link = nil; config = nil
             phase = .waitingForPrinter

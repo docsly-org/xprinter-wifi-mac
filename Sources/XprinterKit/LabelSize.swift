@@ -66,8 +66,8 @@ extension CUPS {
             let path = "/etc/cups/ppd/\(q.name).ppd"
             guard let ppd = try? String(contentsOfFile: path, encoding: .isoLatin1) else { continue }
             let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("\(q.name)-\(UUID().uuidString).ppd")
-            try LabelSize.apply(ppd: ppd, width: width, height: height).write(to: tmp, atomically: true, encoding: .isoLatin1)
             defer { try? FileManager.default.removeItem(at: tmp) }
+            try LabelSize.apply(ppd: ppd, width: width, height: height).write(to: tmp, atomically: true, encoding: .isoLatin1)
             try run("/usr/sbin/lpadmin", ["-p", q.name, "-P", tmp.path])
         }
     }
