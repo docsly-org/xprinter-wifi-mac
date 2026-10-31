@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconFile</key><string>AppIcon</string>
+	<key>CFBundleExecutable</key><string>XprinterSetup</string>
+	<key>CFBundleIdentifier</key><string>io.github.docsly-org.xprinter-setup</string>
+	<key>CFBundleName</key><string>Xprinter Setup</string>
+	<key>CFBundleDisplayName</key><string>Xprinter Setup</string>
+	<key>CFBundlePackageType</key><string>APPL</string>
+	<key>CFBundleShortVersionString</key><string>1.0</string>
+	<key>CFBundleVersion</key><string>1</string>
+	<key>CFBundleDevelopmentRegion</key><string>en</string>
+	<key>CFBundleLocalizations</key><array><string>en</string><string>ru</string></array>
+	<key>LSMinimumSystemVersion</key><string>13.0</string>
+	<key>NSHighResolutionCapable</key><true/>
+	<key>NSLocationUsageDescription</key><string>macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks for the printer.</string>
+	<key>NSLocationWhenInUseUsageDescription</key><string>macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks for the printer.</string>
+	<key>NSLocalNetworkUsageDescription</key><string>Finds the printer in your local network after it joins Wi-Fi.</string>
+</dict>
+</plist>
