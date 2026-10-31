@@ -32,7 +32,7 @@ struct SetupView: View {
             wifi.scan()
             if Demo.isOn { openWindow(id: "settings") }
         }
-        .onChange(of: printer.phase) { if $0 == .ready { changeNetwork = false } }
+        .onChange(of: printer.setupCompleted) { _ in changeNetwork = false }
         .onChange(of: choice) {
             ssid = $0 == Self.other ? "" : $0
             if $0 != Self.other { passwordFocused = true }
@@ -153,7 +153,7 @@ struct SetupView: View {
         .safeAreaInset(edge: .bottom) {
             HStack {
                 if printer.usbPlugged {
-                    Button { changeNetwork = true; printer.phase = .ready } label: { Text("Change Network…", bundle: .module) }
+                    Button { printer.phase = .ready; changeNetwork = true } label: { Text("Change Network…", bundle: .module) }
                 }
                 Spacer()
                 if !printer.addedToMac {

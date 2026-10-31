@@ -31,6 +31,14 @@ public enum NetworkPrinter {
         return String(decoding: reply, as: UTF8.self)
     }
 
+    /// Opens and closes a connection without sending anything.
+    public static func isReachable(_ host: String, port: UInt16 = 9100) -> Bool {
+        let fd = socket(AF_INET, SOCK_STREAM, 0)
+        guard fd >= 0 else { return false }
+        defer { close(fd) }
+        return connect(fd, host: host, port: port, timeout: 3)
+    }
+
     /// Non-blocking connect with a timeout, then back to blocking mode.
     static func connect(_ fd: Int32, host: String, port: UInt16, timeout: TimeInterval) -> Bool {
         var addr = sockaddr_in()

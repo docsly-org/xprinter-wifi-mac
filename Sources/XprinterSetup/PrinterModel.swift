@@ -20,6 +20,8 @@ final class PrinterModel: ObservableObject {
     /// The cable is plugged in (independent of the preference). Changing the Wi-Fi network needs it.
     @Published var usbPlugged = false
     @Published var settingsError: String?
+    /// Bumped after a successful setup, so the view can leave the "change network" form.
+    @Published var setupCompleted = 0
     /// Name of the macOS printer that points at the printer's Wi-Fi address, as shown in Print dialogs.
     @Published var macPrinterName: String?
     var addedToMac: Bool { macPrinterName != nil }
@@ -108,6 +110,7 @@ final class PrinterModel: ObservableObject {
             try? await Task.sleep(nanoseconds: 2_000_000_000)
         }
         phase = .ready
+        setupCompleted += 1
     }
 
     /// The printer is already on Wi-Fi: only add it to this Mac, no password needed.
@@ -157,9 +160,16 @@ final class PrinterModel: ObservableObject {
                 try? await Task.sleep(nanoseconds: 8_000_000_000)  // the Wi-Fi module restarts first
                 var ip: String?
                 for attempt in 0..<20 {
-                    let current = try await Self.background { try Xprinter.wifiIP() }
-                    // right after the restart the module may still report the old address
-                    if let current, current != oldIP || attempt >= 4 { ip = current; break }
+                    // a single USB hiccup while the module restarts must not end the setup
+                    let current = (try? await Self.background { try Xprinter.wifiIP() }) ?? nil
+                    if let current, current != oldIP {
+                        ip = current; break
+                    }
+                    // Same address as before: the module may just repeat it after a failed join.
+                    // Trust it only when the printer really answers there.
+                    if let current, attempt >= 4, await Self.background({ NetworkPrinter.isReachable(current) }) {
+                        ip = current; break
+                    }
                     try? await Task.sleep(nanoseconds: 3_000_000_000)
                 }
                 guard let ip else {
