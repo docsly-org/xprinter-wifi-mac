@@ -7,16 +7,25 @@ public struct PrinterQueue: Hashable {
 }
 
 public enum CUPS {
-    /// Parses `LANG=C lpstat -v` output: "device for NAME: URI".
+    /// Parses `lpstat -v` output: "device for NAME: URI". The prefix is localized by macOS
+    /// (e.g. "устройство для NAME: URI"), so only the last word before ": " is taken; queue names have no spaces.
     public static func parseQueues(_ output: String) -> [PrinterQueue] {
         output.split(separator: "\n").compactMap { line in
-            guard line.hasPrefix("device for "), let colon = line.range(of: ": ") else { return nil }
-            let name = line[line.index(line.startIndex, offsetBy: 11)..<colon.lowerBound]
+            guard let colon = line.range(of: ": "),
+                  let name = line[..<colon.lowerBound].split(separator: " ").last else { return nil }
             return PrinterQueue(name: String(name), uri: String(line[colon.upperBound...]))
         }
     }
 
     public static func queues() -> [PrinterQueue] { parseQueues((try? run("/usr/bin/lpstat", ["-v"])) ?? "") }
+
+    /// Addresses of Xprinter Wi-Fi printers added to macOS ("socket://a.b.c.d:9100").
+    public static func xprinterNetworkHosts() -> [String] {
+        queues().compactMap { q in
+            guard q.name.hasPrefix("Xprinter"), q.uri.hasPrefix("socket://") else { return nil }
+            return URL(string: q.uri)?.host
+        }
+    }
 
     /// Queue name for the Wi-Fi printer, e.g. "Xprinter_XP_420B_WiFi".
     public static func queueName(model: String) -> String {

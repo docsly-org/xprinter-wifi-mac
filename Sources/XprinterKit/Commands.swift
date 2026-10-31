@@ -39,15 +39,30 @@ public enum XprinterCommand {
     }
 }
 
-/// High-level operations over USB.
+/// How the app reaches the printer.
+public enum PrinterLink: Equatable, Sendable {
+    case usb
+    case network(String)  // IPv4 address, TCP port 9100
+}
+
+/// High-level operations over USB or Wi-Fi.
 public enum Xprinter {
-    public static func config() throws -> PrinterConfig {
-        PrinterConfig(report: try USBPrinter.exchange(XprinterCommand.readConfig, until: XprinterCommand.end, timeout: 6))
+    static func exchange(_ link: PrinterLink, _ data: Data, until end: String? = nil, timeout: TimeInterval = 3) throws -> String {
+        switch link {
+        case .usb: try USBPrinter.exchange(data, until: end, timeout: timeout)
+        case .network(let host): try NetworkPrinter.exchange(host: host, data, until: end, timeout: timeout)
+        }
+    }
+
+    public static func send(_ data: Data, via link: PrinterLink) throws { _ = try exchange(link, data) }
+
+    public static func config(via link: PrinterLink = .usb) throws -> PrinterConfig {
+        PrinterConfig(report: try exchange(link, XprinterCommand.readConfig, until: XprinterCommand.end, timeout: 6))
     }
 
     /// The printer's Wi-Fi address, or nil while it is not connected.
-    public static func wifiIP() throws -> String? {
-        let reply = try USBPrinter.exchange(XprinterCommand.readWiFiIP, until: XprinterCommand.end)
+    public static func wifiIP(via link: PrinterLink = .usb) throws -> String? {
+        let reply = try exchange(link, XprinterCommand.readWiFiIP, until: XprinterCommand.end)
         return PrinterConfig.okValue(reply).flatMap { $0 == "0.0.0.0" ? nil : $0 }
     }
 }

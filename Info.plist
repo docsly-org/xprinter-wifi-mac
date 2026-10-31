@@ -13,6 +13,7 @@
 	<key>CFBundleDevelopmentRegion</key><string>en</string>
 	<key>CFBundleLocalizations</key><array><string>en</string><string>ru</string></array>
 	<key>LSMinimumSystemVersion</key><string>13.0</string>
+	<key>NSLocalNetworkUsageDescription</key><string>Talks to your Xprinter over Wi-Fi to show and change its settings.</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSLocationUsageDescription</key><string>macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks for the printer.</string>
 	<key>NSLocationWhenInUseUsageDescription</key><string>macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks for the printer.</string>

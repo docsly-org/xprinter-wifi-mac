@@ -8,6 +8,7 @@ public enum USBPrinter {
     public static let vendorID = 0x2D37  // Xprinter
 
     public struct NotConnected: LocalizedError {
+        public init() {}
         public var errorDescription: String? { String(localized: "The printer is not connected over USB.", bundle: .module) }
     }
 

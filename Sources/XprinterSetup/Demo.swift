@@ -11,11 +11,12 @@ enum Demo {
         return URL(fileURLWithPath: i.flatMap { $0 < args.count ? args[$0] : nil } ?? ".")
     }
 
-    static let config = PrinterConfig(report: """
+    static let config = configWith(ip: "0.0.0.0")
+    static func configWith(ip: String) -> PrinterConfig { PrinterConfig(report: """
         XP-420B Version: 1.040.3552 CEZD
         Wifi : YES
         Wifi Name: XP-420B
-        Wifi Sta Ip: 192.168.1.50
+        Wifi Sta Ip: \(ip)
         Wifi Versions: X4_V95.0.9
         Density: 8.0
         Speed: 4 Inch
@@ -27,7 +28,7 @@ enum Demo {
         Shift Y: 0
         Reference X: 0
         Reference Y: 0
-        """)
+        """) }
     static let networks = ["Home", "Office", "Shop Wi-Fi"]
 
     @MainActor
@@ -36,6 +37,7 @@ enum Demo {
         try? await Task.sleep(nanoseconds: 2_500_000_000)
         await save(window: loc("Printer Settings"), as: "settings-\(lang)")
         await save(window: loc("Xprinter Setup"), as: "setup-\(lang)")
+        model.config = configWith(ip: "192.168.1.50")
         model.phase = .done(queue: "Xprinter XP-420B (Wi-Fi)", ip: "192.168.1.50")
         try? await Task.sleep(nanoseconds: 1_000_000_000)
         await save(window: loc("Xprinter Setup"), as: "done-\(lang)")

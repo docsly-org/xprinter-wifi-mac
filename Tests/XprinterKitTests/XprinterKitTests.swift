@@ -65,6 +65,9 @@ final class XprinterKitTests: XCTestCase {
         let q = CUPS.parseQueues("device for Xprinter_XP_420B: usb://Xprinter/XP-420B?serial=S\ndevice for X_WiFi: socket://1.2.3.4:9100")
         XCTAssertEqual(q.map(\.name), ["Xprinter_XP_420B", "X_WiFi"])
         XCTAssertEqual(CUPS.queueName(model: "XP-420B"), "Xprinter_XP_420B_WiFi")
+        // lpstat output is localized on a Russian macOS
+        XCTAssertEqual(CUPS.parseQueues("устройство для Xprinter_XP_420B_WiFi: socket://192.168.1.50:9100"),
+                       [PrinterQueue(name: "Xprinter_XP_420B_WiFi", uri: "socket://192.168.1.50:9100")])
     }
 
     /// Read-only check against a real printer: XPRINTER_LIVE=1 swift test
@@ -75,5 +78,13 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertNotNil(c.density)
         print("LIVE model=\(c.model ?? "-") fw=\(c.firmware ?? "-") density=\(c.density ?? -1) speed=\(c.speed ?? -1) wifi=\(c.wifiIP ?? "-")")
         print("LIVE wifiIP=\(try Xprinter.wifiIP() ?? "-")")
+    }
+
+    /// Read-only check over Wi-Fi: XPRINTER_LIVE_IP=a.b.c.d swift test
+    func testLiveNetworkReadOnly() throws {
+        guard let ip = ProcessInfo.processInfo.environment["XPRINTER_LIVE_IP"] else { throw XCTSkip("set XPRINTER_LIVE_IP") }
+        let c = try Xprinter.config(via: .network(ip))
+        XCTAssertEqual(c.wifiIP, ip)
+        print("LIVE-NET model=\(c.model ?? "-") density=\(c.density ?? -1) speed=\(c.speed ?? -1)")
     }
 }

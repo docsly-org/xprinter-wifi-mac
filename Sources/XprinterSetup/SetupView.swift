@@ -10,6 +10,7 @@ struct SetupView: View {
     @State private var ssid = ""
     @State private var password = ""
     @FocusState private var passwordFocused: Bool
+    @State private var changeNetwork = false
     static let other = "\u{0}other"  // can't collide with a real SSID
 
     var body: some View {
@@ -50,7 +51,7 @@ struct SetupView: View {
 
     @ViewBuilder private var statusLine: some View {
         if printer.config == nil {
-            Text("Connect the printer with a USB cable and turn it on.", bundle: .module)
+            Text("Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi.", bundle: .module)
         } else if let ip = printer.config?.wifiIP {
             Label { Text("On Wi-Fi · \(ip)", bundle: .module) } icon: { Image(systemName: "wifi") }
         } else {
@@ -76,14 +77,43 @@ struct SetupView: View {
                 Text("All set", bundle: .module).font(.headline)
                 Text("Choose “\(queue)” in any Print dialog. The printer’s address is \(ip). You can unplug the USB cable.", bundle: .module)
                     .multilineTextAlignment(.center).foregroundStyle(.secondary)
-                Button { printer.phase = .ready } label: { Text("Done", bundle: .module) }
+                Button { changeNetwork = false; printer.phase = .ready } label: { Text("Done", bundle: .module) }
                     .keyboardShortcut(.defaultAction).padding(.top, 6)
             }
             .padding(24)
 
         case .ready, .failed:
-            form
+            if let ip = printer.config?.wifiIP, !changeNetwork, printer.phase == .ready {
+                onWiFi(ip: ip)
+            } else {
+                form
+            }
         }
+    }
+
+    /// Printer already on Wi-Fi: nothing to type. Either all is set, or one click adds it to macOS.
+    private func onWiFi(ip: String) -> some View {
+        VStack(spacing: 10) {
+            if printer.addedToMac {
+                Image(systemName: "checkmark.circle.fill").font(.system(size: 40)).foregroundStyle(.green)
+                Text("The printer works over Wi-Fi", bundle: .module).font(.headline)
+                Text("Choose “\(printer.wifiQueueTitle)” in any Print dialog.", bundle: .module)
+                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
+            } else {
+                Text("The printer is on Wi-Fi but not added to this Mac yet.", bundle: .module)
+                    .multilineTextAlignment(.center).foregroundStyle(.secondary)
+                Button { printer.addToMac() } label: { Text("Add to This Mac", bundle: .module).frame(maxWidth: .infinity) }
+                    .controlSize(.large).buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+            }
+            if printer.link == .usb {
+                Button { changeNetwork = true } label: { Text("Connect to Another Network…", bundle: .module) }
+                    .buttonStyle(.link).padding(.top, 6)
+            } else {
+                Text("Connected over Wi-Fi. To change the network, connect the USB cable.", bundle: .module)
+                    .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center).padding(.top, 6)
+            }
+        }
+        .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 24)
     }
 
     private var form: some View {

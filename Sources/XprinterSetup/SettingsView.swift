@@ -61,6 +61,20 @@ struct SettingsView: View {
                     Button { confirmTestPage = true } label: { Text("Print Test Page…", bundle: .module) }
                 } header: { Text("About This Printer", bundle: .module) }
 
+                Section {
+                    Picker(selection: $printer.preference) {
+                        Text("Automatically", bundle: .module).tag(PrinterModel.LinkPreference.auto)
+                        Text("USB only", bundle: .module).tag(PrinterModel.LinkPreference.usb)
+                        Text("Wi-Fi only", bundle: .module).tag(PrinterModel.LinkPreference.wifi)
+                    } label: { Text("Connection", bundle: .module) }
+                } footer: {
+                    Group {
+                        if printer.link == .usb { Text("Now connected over USB.", bundle: .module) }
+                        else if case .network(let ip) = printer.link { Text("Now connected over Wi-Fi (\(ip)).", bundle: .module) }
+                    }
+                    .font(.callout).foregroundStyle(.secondary)
+                }
+
                 if let e = printer.settingsError {
                     Label(e, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
                 }
@@ -77,7 +91,7 @@ struct SettingsView: View {
         } else {
             VStack(spacing: 10) {
                 Image(systemName: "cable.connector").font(.system(size: 36)).foregroundStyle(.secondary)
-                Text("Connect the printer with a USB cable to change its settings.", bundle: .module)
+                Text("Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi.", bundle: .module)
                     .multilineTextAlignment(.center).foregroundStyle(.secondary)
             }
             .padding(40)

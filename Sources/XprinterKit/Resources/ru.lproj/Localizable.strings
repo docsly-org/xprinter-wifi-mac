@@ -1,2 +1,3 @@
 "The printer is not connected over USB." = "Принтер не подключён по USB.";
 "The Xprinter driver is not installed. Install it from xprintertech.com, then try again." = "Не установлен драйвер Xprinter. Установите его с сайта xprintertech.com и попробуйте снова.";
+"The printer does not answer over Wi-Fi." = "Принтер не отвечает по Wi‑Fi.";
