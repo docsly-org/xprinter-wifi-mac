@@ -74,8 +74,13 @@ final class PrinterModel: ObservableObject {
         }
     }
 
-    /// Asks the printer again (launch, app activation, Settings window, "Check Again").
-    func refresh() { recheck = true }
+    /// Checks the printer again. Over Wi-Fi a normal refresh only tests that the printer is still there
+    /// (no reply needed); `deep` also reads its settings — used for "Check Again" only. See NetworkPrinter.
+    func refresh(deep: Bool = false) {
+        recheck = true
+        if deep { deepCheck = true }
+    }
+    private var deepCheck = false
 
     /// Every 2 s only the cable is checked (no printer traffic). The printer itself is asked only on `refresh()`
     /// or when the cable comes or goes: its Wi-Fi module hangs after a while, so the app never polls it in the background.
@@ -96,12 +101,19 @@ final class PrinterModel: ObservableObject {
                     if link != nil { link = nil; config = nil }
                     notResponding = false
                 } else if link == .usb || recheck {
-                    let found = await Self.background { Self.findOnNetwork() }
-                    link = found.link
-                    await reload()
-                    notResponding = config == nil && found.silent
+                    if case .network(let host)? = link, config != nil, !deepCheck {
+                        let there = await Self.background { NetworkPrinter.isReachable(host) }
+                        if !there { link = nil; config = nil }
+                    } else {
+                        let found = await Self.background { Self.findOnNetwork() }
+                        link = found.link
+                        config = found.config
+                        await reload()
+                        notResponding = config == nil && found.silent
+                    }
                 }
                 recheck = false
+                deepCheck = false
                 if config == nil { link = nil }
                 if config == nil, phase != .waitingForPrinter { phase = .waitingForPrinter }
                 if config != nil, phase == .waitingForPrinter { phase = .ready }
@@ -113,23 +125,29 @@ final class PrinterModel: ObservableObject {
     /// Printers added to this Mac, an address typed by the user, then the vendor's broadcast search.
     /// The broadcast is best effort: some Wi-Fi setups drop it, hence the typed-address fallback.
     /// `silent`: a known address accepts the connection but sends nothing back (hung Wi-Fi module).
-    nonisolated static func findOnNetwork() -> (link: PrinterLink?, silent: Bool) {
+    /// Reads the settings once from the first address that answers (each reply costs, see NetworkPrinter).
+    nonisolated static func findOnNetwork() -> (link: PrinterLink?, config: PrinterConfig?, silent: Bool) {
         let typed = UserDefaults.standard.string(forKey: "printerIP").map { [$0] } ?? []
         var silent = false
-        for host in Array(Set(CUPS.xprinterNetworkHosts() + typed)) {
-            let link = PrinterLink.network(host)
-            if (try? Xprinter.config(via: link))?.isValid == true { return (link, false) }
-            if NetworkPrinter.isReachable(host) { silent = true }
+        var hosts = Array(Set(CUPS.xprinterNetworkHosts() + typed))
+        if !searchedOnce {  // one broadcast per launch is enough
+            searchedOnce = true
+            hosts += Discovery.search().map(\.ip).filter { !hosts.contains($0) }
         }
-        guard !searchedOnce else { return (nil, silent) }  // one broadcast per launch is enough
-        searchedOnce = true
-        let found = Discovery.search().lazy.map { PrinterLink.network($0.ip) }.first { (try? Xprinter.config(via: $0))?.isValid == true }
-        return (found, silent && found == nil)
+        for host in hosts where NetworkPrinter.isReachable(host) {
+            let link = PrinterLink.network(host)
+            if let c = try? Xprinter.config(via: link), c.isValid { return (link, c, false) }
+            silent = true  // accepts the connection, answers nothing: hung module
+        }
+        return (nil, nil, silent)
     }
 
+    /// Re-reads the settings over USB. Over Wi-Fi the copy in memory is kept when there is one.
     func reload() async {
         guard let link else { config = nil; macPrinterName = nil; return }
-        config = try? await Self.background { try Xprinter.config(via: link) }
+        if case .network = link, config != nil {} else {
+            config = try? await Self.background { try Xprinter.config(via: link) }
+        }
         guard let ip = config?.wifiIP else { macPrinterName = nil; return }
         let uri = "socket://\(ip):9100"
         macPrinterName = await Self.background {
@@ -229,18 +247,19 @@ final class PrinterModel: ObservableObject {
 
     // MARK: Printer settings
 
-    /// Sends a setting, then reads the configuration back so the UI shows what the printer really stored.
-    func apply(_ command: Data) {
+    /// Sends a setting. Over USB the configuration is read back, so the UI shows what the printer really stored;
+    /// over Wi-Fi the sent values are shown instead (a read-back would cost a reply, see NetworkPrinter).
+    func apply(_ command: Data, shows changes: [String: String] = [:]) {
         guard !Demo.isOn else { return }  // demo never talks to a printer
         Task {
             do {
                 guard let link else { throw USBPrinter.NotConnected() }
                 try await Self.background { try Xprinter.send(command, via: link) }
                 settingsError = nil
+                if case .network = link { config = config?.with(changes) } else { await reload() }
             } catch {
                 settingsError = error.localizedDescription
             }
-            await reload()
         }
     }
 

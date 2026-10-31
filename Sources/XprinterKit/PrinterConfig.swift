@@ -2,7 +2,7 @@ import Foundation
 
 /// Parsed ALLCONFIG report ("Key: Value" per line).
 public struct PrinterConfig: Equatable {
-    public let values: [String: String]
+    public private(set) var values: [String: String]
     public let model: String?
     public let firmware: String?
 
@@ -23,6 +23,14 @@ public struct PrinterConfig: Equatable {
     }
 
     public subscript(key: String) -> String? { values[key] }
+
+    /// The same configuration with some values replaced: shows a setting the app just sent
+    /// without asking the printer again (over Wi-Fi every reply costs, see NetworkPrinter).
+    public func with(_ changes: [String: String]) -> PrinterConfig {
+        var copy = self
+        copy.values.merge(changes) { $1 }
+        return copy
+    }
 
     func int(_ key: String) -> Int? { values[key].flatMap { Int($0.prefix { $0 == "-" || $0.isNumber }) } }
     func on(_ key: String) -> Bool? { values[key].map { $0.uppercased().hasPrefix("ON") } }

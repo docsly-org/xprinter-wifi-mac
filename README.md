@@ -47,6 +47,16 @@ Tip: reserve the printer's address in your router (DHCP reservation), so it neve
 
 Deliberately **not** included, to keep the printer safe: factory/head calibration commands, factory reset (it would also erase Wi-Fi settings), firmware and file operations, changing the printer's own access point, and paper-sensor calibration (feeds several labels; may be added after testing).
 
+## Known printer limitation: Wi-Fi replies
+
+The Wi-Fi module of the XP-420B (X4_V95.0.9) has a firmware bug, found while building this app: after power-on it passes only about **nine replies** from the printer back to the network (a reply is, for example, the printer's settings report). Then it hangs, and the printer stops answering on USB too, with the blue light still on, until it is turned off and on.
+
+**Printing is not affected**: print jobs only send data to the printer — 20 such sessions in a row worked fine. It is not a driver problem either: the tests talked to the printer directly, without macOS printing.
+
+What the app does about it: over Wi-Fi it reads the printer's settings once, when it finds the printer, and otherwise only checks that the printer is there (no reply needed). Changing settings over Wi-Fi sends the value without reading it back. Over USB there is no such limit. If the printer stops answering, the app says so and suggests turning it off and on.
+
+Tip: change printer settings over USB when you can.
+
 ## The problem this solves
 
 - Xprinter XP-420B Wi-Fi setup on Mac / macOS
@@ -125,5 +135,7 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 **Настройки принтера (⌘,)** — по USB, а после настройки и по Wi‑Fi, без кабеля: плотность, скорость, поворот, зеркальная печать, повтор после ошибки, точное положение, сведения о принтере. Тестовая страница печатается только по вашему запросу.
 
 **Типичные проблемы, которые решает программа:** XP-420B не подключается к Wi‑Fi, видна только сеть `XP-420B` (пароль `12345678`); не открывается `10.10.100.1`; на тестовой странице `STA IP: 0.0.0.0`; утилита Xprinter Diagnostic Tool работает только на Windows; приложение Print Label не находит принтер; как настроить Wi‑Fi принтера этикеток Xprinter на MacBook.
+
+**Известное ограничение принтера.** В прошивке модуля Wi‑Fi XP-420B (X4_V95.0.9) есть ошибка, которую мы нашли при разработке: после включения он передаёт обратно в сеть только около **девяти ответов** принтера (например, отчётов о настройках), а потом зависает — и принтер перестаёт отвечать даже по USB, хотя синий индикатор горит; помогает только выключить и включить. **Печать это не затрагивает**: задания только отправляют данные в принтер — 20 таких сеансов подряд прошли без сбоев. Драйвер тут ни при чём — тесты шли напрямую, без него. Программа поэтому по Wi‑Fi читает настройки один раз, а дальше лишь проверяет, что принтер на месте; если он перестал отвечать — подскажет перезагрузить. Настройки по возможности меняйте по USB.
 
 **Отказ от ответственности.** Программа бесплатная и неофициальная, не связана с компанией Xprinter. Она предоставляется **«как есть», без каких-либо гарантий** — вы используете её на свой страх и риск. Авторы не несут ответственности за возможный ущерб принтеру, данным или чему-либо ещё. Лицензия — [MIT](LICENSE).

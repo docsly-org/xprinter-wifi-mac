@@ -83,7 +83,7 @@ struct SetupView: View {
             VStack(spacing: 12) {
                 Text("The printer does not answer. Turn it off, wait 5 seconds and turn it on again.", bundle: .module)
                     .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                Button { printer.refresh() } label: { Text("Check Again", bundle: .module) }
+                Button { printer.refresh(deep: true) } label: { Text("Check Again", bundle: .module) }
             }
             .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 28)
 

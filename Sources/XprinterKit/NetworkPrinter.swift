@@ -1,6 +1,12 @@
 import Foundation
 
 /// Two-way talk with the printer over Wi-Fi: the same TSPL commands on TCP port 9100, replies on the same socket.
+///
+/// Firmware bug (XP-420B, Wi-Fi module X4_V95.0.9): after power-on the module passes only about nine replies
+/// from the printer to the network (a reply = an ALLCONFIG report, ~2.5 KB); then it hangs and the printer
+/// stops answering on USB too until it is turned off and on. Data sent *to* the printer is not affected:
+/// 20 write-only sessions in a row were fine, so normal printing over Wi-Fi is safe.
+/// Callers therefore ask the printer for a reply over Wi-Fi as rarely as possible.
 public enum NetworkPrinter {
     public struct Unreachable: LocalizedError {
         public var errorDescription: String? { String(localized: "The printer does not answer over Wi-Fi.", bundle: .module) }
@@ -19,7 +25,7 @@ public enum NetworkPrinter {
         setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
         let sent = data.withUnsafeBytes { write(fd, $0.baseAddress, data.count) }
         guard sent == data.count else { throw Unreachable() }
-        guard let terminator else { return "" }
+        guard let terminator else { closeGracefully(fd); return "" }
 
         var reply = Data()
         var buf = [UInt8](repeating: 0, count: 4096)
@@ -28,7 +34,21 @@ public enum NetworkPrinter {
             let n = read(fd, &buf, buf.count)
             if n > 0 { reply.append(buf, count: n) } else if n == 0 { break }  // n < 0: timeout tick
         }
+        closeGracefully(fd)
         return String(decoding: reply, as: UTF8.self)
+    }
+
+    /// Says "done" and lets the printer close first. Closing with unread bytes makes macOS send a reset,
+    /// which the printer's Wi-Fi module handles badly.
+    static func closeGracefully(_ fd: Int32) {
+        shutdown(fd, SHUT_WR)
+        var buf = [UInt8](repeating: 0, count: 512)
+        let deadline = Date().addingTimeInterval(2)
+        while Date() < deadline {
+            let n = read(fd, &buf, buf.count)
+            if n == 0 { break }  // printer closed its side
+            if n < 0 && errno != EAGAIN && errno != EWOULDBLOCK { break }
+        }
     }
 
     /// Opens and closes a connection without sending anything.

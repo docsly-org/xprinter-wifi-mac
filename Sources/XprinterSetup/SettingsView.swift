@@ -15,25 +15,25 @@ struct SettingsView: View {
                     LabeledContent {
                         HStack {
                             Slider(value: $density, in: 0...15, step: 1) { editing in
-                                if !editing { printer.apply(XprinterCommand.density(Int(density))) }
+                                if !editing { printer.apply(XprinterCommand.density(Int(density)), shows: ["Density": "\(Int(density)).0"]) }
                             }
                             Text("\(Int(density))").monospacedDigit().frame(width: 22, alignment: .trailing)
                         }
                     } label: { Text("Darkness", bundle: .module) }
 
-                    Picker(selection: Binding(get: { c.speed ?? 4 }, set: { printer.apply(XprinterCommand.speed($0)) })) {
+                    Picker(selection: Binding(get: { c.speed ?? 4 }, set: { printer.apply(XprinterCommand.speed($0), shows: ["Speed": "\($0) Inch"]) })) {
                         ForEach(2...6, id: \.self) { Text("\($0) in/s", bundle: .module).tag($0) }
                     } label: { Text("Speed", bundle: .module) }
 
                     Toggle(isOn: Binding(get: { c.rotated ?? false },
-                                         set: { printer.apply(XprinterCommand.direction(rotated: $0, mirrored: c.mirrored ?? false)) })) {
+                                         set: { printer.apply(XprinterCommand.direction(rotated: $0, mirrored: c.mirrored ?? false), shows: ["Direction": $0 ? "1" : "0"]) })) {
                         Text("Rotate 180°", bundle: .module)
                     }
                     Toggle(isOn: Binding(get: { c.mirrored ?? false },
-                                         set: { printer.apply(XprinterCommand.direction(rotated: c.rotated ?? false, mirrored: $0)) })) {
+                                         set: { printer.apply(XprinterCommand.direction(rotated: c.rotated ?? false, mirrored: $0), shows: ["Mirror": $0 ? "ON" : "OFF"]) })) {
                         Text("Mirror", bundle: .module)
                     }
-                    Toggle(isOn: Binding(get: { c.reprint ?? true }, set: { printer.apply(XprinterCommand.reprint($0)) })) {
+                    Toggle(isOn: Binding(get: { c.reprint ?? true }, set: { printer.apply(XprinterCommand.reprint($0), shows: ["Reprint": $0 ? "ON" : "OFF"]) })) {
                         Text("Reprint after an error", bundle: .module)
                     }
                 } header: { Text("Printing", bundle: .module) }
@@ -56,11 +56,11 @@ struct SettingsView: View {
 
                 Section {
                     DisclosureGroup(isExpanded: $showPosition) {
-                        dots("Tear-off offset", c.offset) { printer.apply(XprinterCommand.offset($0)) }
-                        dots("Shift horizontally", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0)) }
-                        dots("Shift vertically", c.shiftY) { printer.apply(XprinterCommand.shift(x: c.shiftX ?? 0, y: $0)) }
-                        dots("Origin X", c.referenceX) { printer.apply(XprinterCommand.reference(x: $0, y: c.referenceY ?? 0)) }
-                        dots("Origin Y", c.referenceY) { printer.apply(XprinterCommand.reference(x: c.referenceX ?? 0, y: $0)) }
+                        dots("Tear-off offset", c.offset) { printer.apply(XprinterCommand.offset($0), shows: ["Offset": "\($0)"]) }
+                        dots("Shift horizontally", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0), shows: ["Shift X": "\($0)"]) }
+                        dots("Shift vertically", c.shiftY) { printer.apply(XprinterCommand.shift(x: c.shiftX ?? 0, y: $0), shows: ["Shift Y": "\($0)"]) }
+                        dots("Origin X", c.referenceX) { printer.apply(XprinterCommand.reference(x: $0, y: c.referenceY ?? 0), shows: ["Reference X": "\($0)"]) }
+                        dots("Origin Y", c.referenceY) { printer.apply(XprinterCommand.reference(x: c.referenceX ?? 0, y: $0), shows: ["Reference Y": "\($0)"]) }
                     } label: { Text("Fine position", bundle: .module) }
                 } footer: {
                     Text("Values are in dots: 8 dots = 1 mm.", bundle: .module).font(.callout).foregroundStyle(.secondary)

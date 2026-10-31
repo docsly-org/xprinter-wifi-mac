@@ -56,6 +56,13 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(PrinterConfig(report: "Wifi Sta Ip: 0.0.0.0").wifiIP, nil)
     }
 
+    func testConfigWithChanges() {
+        let c = PrinterConfig(report: report).with(["Density": "12.0", "Mirror": "ON"])
+        XCTAssertEqual(c.density, 12)
+        XCTAssertEqual(c.mirrored, true)
+        XCTAssertEqual(c.speed, 6)  // untouched values stay
+    }
+
     func testOkReply() {
         XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.1.50\r\nXPSETUP-END\r\n"), "192.168.1.50")
         XCTAssertNil(PrinterConfig.okValue("garbage"))
