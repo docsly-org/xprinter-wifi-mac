@@ -70,7 +70,8 @@ public enum CUPS {
             return name
         }
         guard let ppd = ppd(model: model) else { throw NoDriver() }
-        try run("/usr/sbin/lpadmin", ["-p", name, "-D", "Xprinter \(model) (Wi-Fi)", "-v", uri, "-P", ppd, "-E"])
+        // not shared: the Mac should not offer the printer to other computers on the network
+        try run("/usr/sbin/lpadmin", ["-p", name, "-D", "Xprinter \(model) (Wi-Fi)", "-v", uri, "-P", ppd, "-o", "printer-is-shared=false", "-E"])
         return name
     }
 
