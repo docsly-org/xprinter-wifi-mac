@@ -122,3 +122,8 @@
 "Default paper size" = "Размер бумаги по умолчанию";
 "Used when you print from any app." = "Используется при печати из любой программы.";
 "%@ mm, gap %@ mm" = "%@ мм, промежуток %@ мм";
+"Shift left / right" = "Сдвиг влево / вправо";
+"Shift up / down" = "Сдвиг вверх / вниз";
+"Feed after printing" = "Подача после печати";
+"Position on the label" = "Положение на этикетке";
+"If printing is off the label, shift it. Feed after printing: how far the label comes out, so it is easy to tear off." = "Если печать съезжает с этикетки, сдвиньте её. Подача после печати — насколько выдвигать этикетку, чтобы её было удобно оторвать.";

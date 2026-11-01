@@ -31,10 +31,9 @@ struct SettingsView: View {
 private struct PrintingTab: View {
     @EnvironmentObject var printer: PrinterModel
     @State private var density = 8.0
-    @State private var showPosition = false
 
     var body: some View {
-        PrinterForm(height: showPosition ? 490 : 330) { c in
+        PrinterForm(height: 495) { c in
             Section {
                 LabeledContent {
                     HStack {
@@ -63,18 +62,16 @@ private struct PrintingTab: View {
             }
 
             Section {
-                DisclosureGroup(isExpanded: $showPosition) {
-                    dots("Tear-off offset", c.offset) { printer.apply(XprinterCommand.offset($0), shows: ["Offset": "\($0)"]) }
-                    dots("Shift horizontally", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0), shows: ["Shift X": "\($0)"]) }
-                    dots("Shift vertically", c.shiftY) { printer.apply(XprinterCommand.shift(x: c.shiftX ?? 0, y: $0), shows: ["Shift Y": "\($0)"]) }
-                    dots("Origin X", c.referenceX) { printer.apply(XprinterCommand.reference(x: $0, y: c.referenceY ?? 0), shows: ["Reference X": "\($0)"]) }
-                    dots("Origin Y", c.referenceY) { printer.apply(XprinterCommand.reference(x: c.referenceX ?? 0, y: $0), shows: ["Reference Y": "\($0)"]) }
-                } label: { Text("Fine position", bundle: .module) }
-            } footer: {
-                Text("Values are in dots: 8 dots = 1 mm.", bundle: .module).font(.callout).foregroundStyle(.secondary)
+                millimetres("Shift left / right", c.shiftX) { printer.apply(XprinterCommand.shift(x: $0, y: c.shiftY ?? 0), shows: ["Shift X": "\($0)"]) }
+                millimetres("Shift up / down", c.shiftY) { printer.apply(XprinterCommand.shift(x: c.shiftX ?? 0, y: $0), shows: ["Shift Y": "\($0)"]) }
+                millimetres("Feed after printing", c.offset) { printer.apply(XprinterCommand.offset($0), shows: ["Offset": "\($0)"]) }
+            } header: { Text("Position on the label", bundle: .module) }
+              footer: {
+                Text("If printing is off the label, shift it. Feed after printing: how far the label comes out, so it is easy to tear off.", bundle: .module)
+                    .font(.callout).foregroundStyle(.secondary)
             }
         }
-        .onAppear { density = Double(printer.config?.density ?? 8); showPosition = Demo.isOn }
+        .onAppear { density = Double(printer.config?.density ?? 8) }
         .onChange(of: printer.config?.density) { density = Double($0 ?? 8) }
     }
 }
@@ -309,15 +306,17 @@ private func mm(_ title: String.LocalizationValue, _ value: Double, _ range: Clo
     } label: { Text(loc(title)) }
 }
 
-/// Number field with stepper, like in System Settings. Values are in dots.
-private func dots(_ title: String.LocalizationValue, _ value: Int?, set: @escaping (Int) -> Void) -> some View {
-    let binding = Binding(get: { value ?? 0 }, set: { set(min(max($0, -400), 400)) })
+/// Field with stepper in millimetres (step 0.5); the printer stores dots (203 dpi: 8 dots = 1 mm).
+private func millimetres(_ title: String.LocalizationValue, _ dots: Int?, set: @escaping (Int) -> Void) -> some View {
+    let binding = Binding<Double>(get: { Double(dots ?? 0) / 8 },
+                                  set: { set(Int((min(max($0, -50), 50) * 8).rounded())) })
     return LabeledContent {
         HStack(spacing: 6) {
-            TextField("", value: binding, format: .number)
+            TextField("", value: binding, format: .number.precision(.fractionLength(0...1)))
                 .labelsHidden().multilineTextAlignment(.trailing).frame(width: 56)
                 .textFieldStyle(.roundedBorder)
-            Stepper("", value: binding, in: -400...400).labelsHidden()
+            Text("mm", bundle: .module).foregroundStyle(.secondary)
+            Stepper("", value: binding, in: -50...50, step: 0.5).labelsHidden()
         }
     } label: { Text(loc(title)) }
 }
