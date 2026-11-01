@@ -63,6 +63,9 @@ final class PrinterModel: ObservableObject {
     @Published var notResponding = false
     /// Printer on USB reports a Wi-Fi address, but nothing answers there: the module dropped off the network.
     @Published var wifiDown = false
+    /// Cover / paper state, read over USB only.
+    @Published var status: PrinterStatus?
+    @Published var calibrating = false
     private var recheck = true  // check the network once at launch
     nonisolated(unsafe) private static var searchedOnce = false  // touched only from findOnNetwork, one call at a time
     private var polling: Task<Void, Never>?
@@ -98,6 +101,7 @@ final class PrinterModel: ObservableObject {
                         link = .usb
                         await reload()
                         notResponding = config == nil
+                        status = try? await Self.background { try Xprinter.status() }
                         // only opens a connection, no reply needed from the module
                         if let ip = config?.wifiIP { wifiDown = !(await Self.background { NetworkPrinter.isReachable(ip) }) } else { wifiDown = false }
                     }
@@ -105,8 +109,10 @@ final class PrinterModel: ObservableObject {
                     if link != nil { link = nil; config = nil }
                     notResponding = false
                     wifiDown = false
+                    status = nil
                 } else if link == .usb || recheck {
                     wifiDown = false  // only known (and fixable) with the cable
+                    status = nil
                     if case .network(let host)? = link, config != nil, !deepCheck {
                         let there = await Self.background { NetworkPrinter.isReachable(host) }
                         if !there { link = nil; config = nil }
@@ -270,6 +276,34 @@ final class PrinterModel: ObservableObject {
     }
 
     func printSelfTest() { apply(XprinterCommand.selfTest) }
+
+    /// Calibrates the sensor to the loaded roll (USB only): feeds 2-3 labels without printing.
+    func calibrate() {
+        guard !Demo.isOn, usbPlugged else { return }
+        Task {
+            settingsError = nil
+            let before = try? await Self.background { try Xprinter.status() }
+            if let before, !before.isReady {
+                status = before
+                settingsError = before.contains(.coverOpen) ? loc("Close the printer cover first.")
+                    : before.contains(.paperOut) ? loc("Load the label roll first.") : loc("The printer is busy. Try again in a moment.")
+                return
+            }
+            calibrating = true
+            defer { calibrating = false }
+            do {
+                try await Self.background { try USBPrinter.send(XprinterCommand.calibrateGapLabels) }
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                for _ in 0..<30 {  // wait until the feed is over
+                    if let s = try? await Self.background({ try Xprinter.status() }), s.isReady { break }
+                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                }
+                await reload()
+            } catch {
+                settingsError = error.localizedDescription
+            }
+        }
+    }
 
     /// Soft restart over USB ("Reset Printer"). Settings are kept; Wi-Fi comes back about 10 s later.
     func restartPrinter() { restart(XprinterCommand.restartPrinter, wait: 15) }

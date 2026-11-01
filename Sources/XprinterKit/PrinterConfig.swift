@@ -51,6 +51,19 @@ public struct PrinterConfig: Equatable {
     public var wifiModule: String? { values["Wifi Versions"] }
     public var accessPointName: String? { values["Wifi Name"] }
 
+    public enum Sensor: Equatable { case gap, blackMark, continuous }
+    /// "GAP", "BLINE…" or "CONTINUOUS(T)".
+    public var sensor: Sensor? {
+        guard let m = values["Sensor Mode"]?.uppercased() else { return nil }
+        if m.hasPrefix("GAP") { return .gap }
+        if m.hasPrefix("BLINE") || m.contains("MARK") { return .blackMark }
+        if m.hasPrefix("CONTINUOUS") { return .continuous }
+        return nil
+    }
+    /// Label length and gap measured by calibration, in mm (203 dpi: 8 dots = 1 mm).
+    public var labelLengthMM: Double? { values["Paper Size"].flatMap(Double.init).map { $0 / 8 } }
+    public var gapMM: Double? { values["Gap Size"].flatMap(Double.init).map { $0 / 8 } }
+
     /// Value of a "+OK=value" reply.
     public static func okValue(_ reply: String) -> String? {
         guard let r = reply.range(of: "+OK=") else { return nil }

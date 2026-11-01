@@ -19,6 +19,9 @@ enum Demo {
         Wifi Sta Ip: \(ip)
         Wifi Versions: X4_V95.0.9
         Density: 8.0
+        Sensor Mode: GAP
+        Paper Size: 1021.0
+        Gap Size: 13.0
         Speed: 4 Inch
         Direction: 0
         Mirror: OFF

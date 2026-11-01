@@ -61,6 +61,12 @@ struct SetupView: View {
         } else if printer.config == nil {
             Text("Connect the printer with a USB cable, or turn it on if it is already set up on Wi-Fi.", bundle: .module)
                 .multilineTextAlignment(.center).padding(.horizontal, 32)
+        } else if let s = printer.status, s.contains(.coverOpen) {
+            dot(.orange) { Text("Cover is open", bundle: .module) }
+        } else if let s = printer.status, s.contains(.paperOut) {
+            dot(.orange) { Text("Out of labels", bundle: .module) }
+        } else if let s = printer.status, s.contains(.paperJam) {
+            dot(.orange) { Text("Paper jam", bundle: .module) }
         } else if printer.config?.wifiIP == nil {
             dot(.secondary) { Text("Not on Wi-Fi", bundle: .module) }
         } else if printer.wifiDown {

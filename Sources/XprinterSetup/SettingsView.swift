@@ -6,6 +6,7 @@ struct SettingsView: View {
     @EnvironmentObject var printer: PrinterModel
     @State private var density = 8.0
     @State private var confirmTestPage = false
+    @State private var confirmCalibration = false
     @State private var showPosition = Demo.isOn
 
     var body: some View {
@@ -39,6 +40,15 @@ struct SettingsView: View {
                 } header: { Text("Printing", bundle: .module) }
 
                 Section {
+                    LabeledContent {
+                        Text(sensorText(c)).foregroundStyle(.secondary)
+                    } label: { Text("Sensor", bundle: .module) }
+                    HStack {
+                        Spacer()
+                        if printer.calibrating { ProgressView().controlSize(.small) }
+                        Button { confirmCalibration = true } label: { Text("Calibrate to the Roll…", bundle: .module) }
+                            .disabled(!printer.usbPlugged || printer.calibrating)
+                    }
                     if let size = printer.labelSize {
                         mm("Width", size.width, LabelSize.widthRange) { printer.setLabelSize(width: $0, height: size.height) }
                         mm("Height", size.height, LabelSize.heightRange) { printer.setLabelSize(width: size.width, height: $0) }
@@ -48,7 +58,8 @@ struct SettingsView: View {
                 } header: { Text("Labels", bundle: .module) }
                   footer: {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("The default paper size when you print from any app. Change it when you load a roll of another size.", bundle: .module)
+                        Text("Calibrate after loading a new roll: the printer feeds 2–3 labels without printing on them and learns their length. Width and height below are the default paper size when you print from any app.", bundle: .module)
+                        if !printer.usbPlugged { Text("Calibration needs the USB cable.", bundle: .module) }
                         if let e = printer.labelError { Text(e).foregroundStyle(.red) }
                     }
                     .font(.callout).foregroundStyle(.secondary)
@@ -99,6 +110,11 @@ struct SettingsView: View {
             .scrollDisabled(Demo.isOn)  // screenshots: a non-scrolling form can be snapshotted
             .onAppear { density = Double(c.density ?? 8); printer.refresh(); Task { await printer.loadLabelSize() } }
             .onChange(of: c.density) { density = Double($0 ?? 8) }
+            .confirmationDialog(Text("Calibrate to the loaded roll?", bundle: .module), isPresented: $confirmCalibration) {
+                Button { printer.calibrate() } label: { Text("Calibrate", bundle: .module) }
+            } message: {
+                Text("The printer feeds 2–3 labels and prints nothing on them.", bundle: .module)
+            }
             .confirmationDialog(Text("Print a test page?", bundle: .module), isPresented: $confirmTestPage) {
                 Button { printer.printSelfTest() } label: { Text("Print", bundle: .module) }
             } message: {
@@ -114,6 +130,19 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
+
+    private func sensorText(_ c: PrinterConfig) -> String {
+        switch c.sensor {
+        case .gap:
+            guard let l = c.labelLengthMM, let g = c.gapMM else { return loc("Labels with gaps") }
+            return String(format: loc("Labels with gaps: %@ mm, gap %@ mm"), mmText(l), mmText(g))
+        case .blackMark: return loc("Black mark")
+        case .continuous: return loc("Continuous paper — not calibrated")
+        case nil: return "—"
+        }
+    }
+
+    private func mmText(_ v: Double) -> String { v.formatted(.number.precision(.fractionLength(0...1))) }
 
     private func info(_ title: String.LocalizationValue, _ value: String?) -> some View {
         LabeledContent { Text(value ?? "—").textSelection(.enabled) } label: { Text(loc(title)) }

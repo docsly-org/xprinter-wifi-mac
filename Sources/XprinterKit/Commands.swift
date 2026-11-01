@@ -17,6 +17,13 @@ public enum XprinterCommand {
     public static let readWiFiIP = cmd("WIFI GETIP\r\nOUT \"\(end)\"")
     public static let selfTest = cmd("SELFTEST")
 
+    /// Feeds 2-3 labels without printing, measures label and gap length and switches the sensor to gap labels.
+    /// Same command as the vendor tool's "Calibrate Sensor" for labels with gaps.
+    public static let calibrateGapLabels = cmd("GAPDETECT")
+
+    /// Immediate status query (answered even while the printer is busy): one byte, see `PrinterStatus`.
+    public static let status = Data([27, 33, 63])
+
     /// Restarts only the Wi-Fi module; it rejoins the saved network in a few seconds. Settings are kept.
     public static let restartWiFi = cmd("WIFI RESET")
 
@@ -68,6 +75,12 @@ public enum Xprinter {
     }
 
     public static func send(_ data: Data, via link: PrinterLink) throws { _ = try exchange(link, data) }
+
+    /// Printer status over USB (over Wi-Fi every reply costs, see NetworkPrinter).
+    public static func status() throws -> PrinterStatus? {
+        lock.lock(); defer { lock.unlock() }
+        return try USBPrinter.exchangeData(XprinterCommand.status, minBytes: 1, timeout: 1).last.map { PrinterStatus(rawValue: $0) }
+    }
 
     public static func config(via link: PrinterLink = .usb) throws -> PrinterConfig {
         PrinterConfig(report: try exchange(link, XprinterCommand.readConfig, until: XprinterCommand.end, timeout: 6))

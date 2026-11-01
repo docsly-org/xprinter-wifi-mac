@@ -73,6 +73,18 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(w.offset, -2); XCTAssertEqual(w.shiftY, 3)
     }
 
+    func testStatusAndSensor() {
+        XCTAssertTrue(PrinterStatus(rawValue: 0).isReady)
+        XCTAssertEqual(PrinterStatus(rawValue: 0x01), .coverOpen)  // seen on an XP-420B with the cover open
+        XCTAssertTrue(PrinterStatus(rawValue: 0x05).contains(.paperOut))
+        let gap = PrinterConfig(report: "Sensor Mode: GAP\nPaper Size: 1021.0\nGap Size: 13.0")  // after GAPDETECT
+        XCTAssertEqual(gap.sensor, .gap)
+        XCTAssertEqual(gap.labelLengthMM, 127.625)
+        XCTAssertEqual(gap.gapMM, 1.625)
+        XCTAssertEqual(PrinterConfig(report: "Sensor Mode: CONTINUOUS(T)").sensor, .continuous)
+        XCTAssertEqual(String(decoding: XprinterCommand.calibrateGapLabels, as: UTF8.self), "GAPDETECT\r\n")
+    }
+
     func testOkReply() {
         XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.1.50\r\nXPSETUP-END\r\n"), "192.168.1.50")
         XCTAssertNil(PrinterConfig.okValue("garbage"))
@@ -125,6 +137,7 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertNotNil(c.density)
         print("LIVE model=\(c.model ?? "-") fw=\(c.firmware ?? "-") density=\(c.density ?? -1) speed=\(c.speed ?? -1) wifi=\(c.wifiIP ?? "-")")
         print("LIVE wifiIP=\(try Xprinter.wifiIP() ?? "-")")
+        print("LIVE status=\(String(describing: try Xprinter.status()))")
     }
 
     /// Read-only check over Wi-Fi: XPRINTER_LIVE_IP=a.b.c.d swift test

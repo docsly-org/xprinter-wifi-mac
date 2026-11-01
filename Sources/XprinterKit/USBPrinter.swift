@@ -20,6 +20,18 @@ public enum USBPrinter {
 
     /// Sends `data` and collects the reply until `terminator` appears or `timeout` passes.
     public static func exchange(_ data: Data, until terminator: String? = nil, timeout: TimeInterval = 3) throws -> String {
+        let reply = try exchangeData(data, timeout: timeout) { reply in
+            terminator.map { String(decoding: reply, as: UTF8.self).contains($0) } ?? true
+        }
+        return String(decoding: reply, as: UTF8.self)
+    }
+
+    /// Raw variant for binary replies (status byte).
+    public static func exchangeData(_ data: Data, minBytes: Int, timeout: TimeInterval) throws -> Data {
+        try exchangeData(data, timeout: timeout) { $0.count >= minBytes }
+    }
+
+    static func exchangeData(_ data: Data, timeout: TimeInterval, done: (Data) -> Bool) throws -> Data {
         guard let svc = service() else { throw NotConnected() }
         defer { IOObjectRelease(svc) }
         let intf = try IOUSBHostInterface(__ioService: svc, options: [], queue: nil, interestHandler: nil)
@@ -36,14 +48,13 @@ public enum USBPrinter {
 
         var sent = 0
         try out.__sendIORequest(with: NSMutableData(data: data), bytesTransferred: &sent, completionTimeout: 5)
-        guard let terminator else { return "" }
 
         var reply = Data()
         let deadline = Date().addingTimeInterval(timeout)
-        while Date() < deadline, !String(decoding: reply, as: UTF8.self).contains(terminator) {
+        while !done(reply), Date() < deadline {
             reply += read(0.3)
         }
-        return String(decoding: reply, as: UTF8.self)
+        return reply
     }
 
     public static func send(_ data: Data) throws { _ = try exchange(data) }
