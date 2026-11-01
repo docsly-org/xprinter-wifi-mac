@@ -62,5 +62,7 @@ Live tests (read-only): `XPRINTER_LIVE=1 swift test` with the printer on USB; ad
 
 ## Not in this repository (on purpose)
 
+Kept in the private repository `docsly-org/xprinter-vendor-analysis` (owner access only; start with its README):
+
 - Decompiled code of the vendor's Diagnostic Tool and notes on how it was analysed — private (vendor code must not be published). Everything useful from it is in `docs/PROTOCOL.md`.
 - Backups of a real printer's configuration.
