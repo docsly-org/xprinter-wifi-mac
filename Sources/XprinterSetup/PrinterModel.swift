@@ -66,6 +66,8 @@ final class PrinterModel: ObservableObject {
     /// Cover / paper state, read over USB only.
     @Published var status: PrinterStatus?
     @Published var calibrating = false
+    /// Selected tab of the Settings window (the screenshot mode switches it).
+    @Published var settingsTab: SettingsTab = .printing
     private var recheck = true  // check the network once at launch
     nonisolated(unsafe) private static var searchedOnce = false  // touched only from findOnNetwork, one call at a time
     private var polling: Task<Void, Never>?

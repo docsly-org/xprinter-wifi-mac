@@ -39,7 +39,14 @@ enum Demo {
     static func capture(_ model: PrinterModel) async {
         let lang = Locale.preferredLanguages.first?.hasPrefix("ru") == true ? "ru" : "en"
         try? await Task.sleep(nanoseconds: 2_500_000_000)
-        await save(window: loc("Printer Settings"), as: "settings-\(lang)")
+        for tab in SettingsTab.allCases {
+            model.settingsTab = tab
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            await save(window: nil, as: "settings-\(tab.rawValue)-\(lang)")
+        }
+        model.settingsTab = .printing
+        try? await Task.sleep(nanoseconds: 800_000_000)
+        await save(window: nil, as: "settings-\(lang)")
         await save(window: loc("Xprinter Setup"), as: "setup-\(lang)")
         model.config = configWith(ip: "192.168.1.50")
         model.macPrinterName = "Xprinter XP-420B (Wi-Fi)"
@@ -49,9 +56,12 @@ enum Demo {
     }
 
     @MainActor
-    static func save(window title: String, as name: String) async {
+    /// `title == nil`: the Settings window (its title is the selected tab's name).
+    static func save(window title: String?, as name: String) async {
+        let tabTitles = [loc("Printing"), loc("Labels"), loc("Network"), loc("About")]
         // the theme frame includes the title bar; an app may always snapshot its own windows
-        guard let w = NSApp.windows.first(where: { $0.title == title }), let view = w.contentView?.superview else {
+        guard let w = NSApp.windows.first(where: { win in title.map { win.title == $0 } ?? tabTitles.contains(win.title) }),
+              let view = w.contentView?.superview else {
             print("no window titled \(title); have \(NSApp.windows.map(\.title))"); return
         }
         NSApp.activate(ignoringOtherApps: true)

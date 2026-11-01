@@ -21,6 +21,15 @@ public enum XprinterCommand {
     /// Same command as the vendor tool's "Calibrate Sensor" for labels with gaps.
     public static let calibrateGapLabels = cmd("GAPDETECT")
 
+    /// Switches the sensor to continuous paper. No feed. The printer keeps the measured label and gap length.
+    public static let continuousPaper = cmd("GAP 0,0")
+
+    /// Back to labels with gaps without feeding, using the gap the printer measured before (in dots).
+    /// Millimetres get rounded by the printer (1.6 mm → 12.8 dots), so dots are used.
+    public static func gapLabels(gapDots: Double, offsetDots: Double) -> Data {
+        cmd("GAP \(Int(gapDots.rounded())) dot,\(Int(offsetDots.rounded())) dot")
+    }
+
     /// Immediate status query (answered even while the printer is busy): one byte, see `PrinterStatus`.
     public static let status = Data([27, 33, 63])
 

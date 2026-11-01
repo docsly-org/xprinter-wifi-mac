@@ -95,6 +95,15 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertEqual(String(decoding: XprinterCommand.calibrateGapLabels, as: UTF8.self), "GAPDETECT\r\n")
     }
 
+    func testPaperType() {
+        XCTAssertEqual(String(decoding: XprinterCommand.continuousPaper, as: UTF8.self), "GAP 0,0\r\n")
+        // seen on an XP-420B: after GAP 0,0 the printer keeps Paper Size / Gap Size; GAP <n> dot restores them exactly
+        let cont = PrinterConfig(report: "Sensor Mode: CONTINUOUS(T)\nPaper Size: 1020.0\nGap Size: 14.0\nGap Offset: 0.0")
+        XCTAssertEqual(cont.gapDots, 14)
+        XCTAssertEqual(String(decoding: XprinterCommand.gapLabels(gapDots: 12.8, offsetDots: 0), as: UTF8.self), "GAP 13 dot,0 dot\r\n")
+        XCTAssertNil(PrinterConfig(report: "Gap Size: 0.0").gapDots)
+    }
+
     func testOkReply() {
         XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.1.50\r\nXPSETUP-END\r\n"), "192.168.1.50")
         XCTAssertNil(PrinterConfig.okValue("garbage"))

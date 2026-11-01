@@ -64,6 +64,9 @@ public struct PrinterConfig: Equatable {
     /// Label length and gap measured by calibration, in mm (203 dpi: 8 dots = 1 mm).
     public var labelLengthMM: Double? { values["Paper Size"].flatMap(Double.init).map { $0 / 8 } }
     public var gapMM: Double? { values["Gap Size"].flatMap(Double.init).map { $0 / 8 } }
+    /// Gap remembered from the last calibration (kept while the sensor is set to continuous paper).
+    public var gapDots: Double? { values["Gap Size"].flatMap(Double.init).flatMap { $0 > 0 ? $0 : nil } }
+    public var gapOffsetDots: Double { values["Gap Offset"].flatMap(Double.init) ?? 0 }
 
     /// Value of a "+OK=value" reply.
     public static func okValue(_ reply: String) -> String? {

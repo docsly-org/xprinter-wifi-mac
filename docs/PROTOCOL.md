@@ -110,7 +110,9 @@ The vendor tool reads the Wi-Fi extras with:
 | `SET TEAR ON` + `SET PEEL OFF` + `SET CUTTER OFF` | output mode; the vendor tool sends all three together. XP-420B has no peeler/cutter. | 🔍 |
 | `SET CUTTER <n>` / `ON` | cut every n labels | 🔍 |
 | `SIZE w mm,h mm` / `SIZE w,h` | label size (the macOS driver sends it with every job) | 🔍 |
-| `GAP g mm,o mm` / `BLINE g mm,o mm` / `GAP 0,0` | gap labels / black mark / continuous | 🔍 |
+| `GAP 0,0` | Continuous paper: `Sensor Mode` → `CONTINUOUS(T)`. No feed. `Paper Size` and `Gap Size` from the last calibration are **kept**. | ✅ |
+| `GAP n dot,o dot` | Back to gap labels without feeding, e.g. `GAP 14 dot,0 dot` restores `Gap Size: 14.0` exactly. In mm the printer rounds (`GAP 1.6 mm,0 mm` → 12.8 dots). | ✅ |
+| `BLINE g mm,o mm` | black-mark paper | 🔍 |
 | `SET GAP n` / `SET SENSOR_REF AUTO`/`MANUAL` | sensor sensitivity | 🔍 |
 | `LIMITFEED n dot` | max feed when looking for a gap | 🔍 |
 | `SET HEAD ON/OFF` | cover-open detection (off = may print with the head open) | 🔍 — not recommended |

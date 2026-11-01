@@ -4,7 +4,6 @@ import XprinterKit
 /// Main window: pick a network, type the password, press Connect.
 struct SetupView: View {
     @EnvironmentObject var printer: PrinterModel
-    @Environment(\.openWindow) private var openWindow
     @StateObject private var wifi = WiFiScanner(demo: Demo.isOn)
     @State private var choice = SetupView.other
     @State private var ssid = ""
@@ -23,13 +22,13 @@ struct SetupView: View {
         }
         .toolbar {
             ToolbarItem {
-                Button { openWindow(id: "settings") } label: { Image(systemName: "gearshape") }
+                SettingsButton { Image(systemName: "gearshape") }
                     .help(Text("Printer Settings…", bundle: .module))
                     .disabled(printer.config == nil)
             }
         }
         .onAppear {
-            if Demo.isOn { openWindow(id: "settings") }
+            if Demo.isOn { openSettingsWindow() }
         }
         .onChange(of: printer.setupCompleted) { _ in changeNetwork = false }
         .onChange(of: choice) {

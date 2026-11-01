@@ -112,3 +112,13 @@
 "Current password" = "Текущий пароль";
 "Show" = "Показать";
 "Hide" = "Скрыть";
+"About" = "О принтере";
+"Paper" = "Бумага";
+"Continuous paper" = "Непрерывная лента";
+"Label length" = "Длина этикетки";
+"Calibrate…" = "Откалибровать…";
+"Switching paper type feeds nothing. After loading a roll of another size, calibrate: the printer feeds 2–3 labels without printing and learns their length." = "Переключение типа бумаги ничего не прогоняет. После установки рулона другого размера откалибруйте: принтер прогонит 2–3 этикетки, ничего на них не печатая, и запомнит их длину.";
+"Needs the USB cable." = "Нужен кабель USB.";
+"Default paper size" = "Размер бумаги по умолчанию";
+"Used when you print from any app." = "Используется при печати из любой программы.";
+"%@ mm, gap %@ mm" = "%@ мм, промежуток %@ мм";
