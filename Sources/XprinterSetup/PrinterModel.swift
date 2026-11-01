@@ -150,7 +150,7 @@ final class PrinterModel: ObservableObject {
         }
         for host in hosts where NetworkPrinter.isReachable(host) {
             let link = PrinterLink.network(host)
-            if let c = try? Xprinter.config(via: link), c.isValid { return (link, c, false) }
+            if let c = try? Xprinter.config(via: link) { return (link, c, false) }
             silent = true  // accepts the connection, answers nothing: hung module
         }
         return (nil, nil, silent)
@@ -160,7 +160,7 @@ final class PrinterModel: ObservableObject {
     func reload() async {
         guard let link else { config = nil; macPrinterName = nil; return }
         if case .network = link, config != nil {} else {
-            config = try? await Self.background { try Xprinter.config(via: link) }
+            config = await Self.readConfig(via: link)
         }
         guard let ip = config?.wifiIP else { macPrinterName = nil; return }
         let uri = "socket://\(ip):9100"
@@ -200,10 +200,10 @@ final class PrinterModel: ObservableObject {
     /// Connects to a printer that is already on Wi-Fi, at an address the user typed.
     func useAddress(_ ip: String) async -> Bool {
         let link = PrinterLink.network(ip.trimmingCharacters(in: .whitespaces))
-        guard case .network(let host) = link,
-              let c = try? await Self.background({ try Xprinter.config(via: link) }), c.isValid else { return false }
+        guard case .network(let host) = link, let c = await Self.readConfig(via: link) else { return false }
         UserDefaults.standard.set(host, forKey: "printerIP")
         self.link = link
+        config = c  // reload() keeps it: over Wi-Fi every reply costs
         await reload()
         if config != nil { phase = .ready }
         return config != nil
@@ -272,12 +272,12 @@ final class PrinterModel: ObservableObject {
                 guard let link else { throw USBPrinter.NotConnected() }
                 try await Self.background { try Xprinter.send(command, via: link) }
                 settingsError = nil
-                if link == .usb, let fresh = try? await Self.background({ try Xprinter.config(via: .usb) }) {
+                if link == .usb, let fresh = await Self.readConfig(via: .usb) {
                     config = fresh  // an incomplete read keeps what is shown
                 }
             } catch {
                 settingsError = error.localizedDescription
-                if let link, let fresh = try? await Self.background({ try Xprinter.config(via: link) }) { config = fresh }
+                if let link, let fresh = await Self.readConfig(via: link) { config = fresh }
             }
         }
     }
@@ -353,6 +353,11 @@ final class PrinterModel: ObservableObject {
             phase = .waitingForPrinter
             refresh(deep: true)
         }
+    }
+
+    /// The printer's settings, read off the main thread; nil when it doesn't answer or the reply is incomplete.
+    nonisolated static func readConfig(via link: PrinterLink) async -> PrinterConfig? {
+        await background { try? Xprinter.config(via: link) }
     }
 
     nonisolated static func background<T: Sendable>(_ work: @escaping @Sendable () throws -> T) async throws -> T {

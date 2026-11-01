@@ -3,7 +3,6 @@ import Foundation
 /// TSPL commands for Xprinter label printers. Every command here was checked on an XP-420B
 /// (firmware 1.040.3552) by writing a value and reading it back from ALLCONFIG.
 public enum XprinterCommand {
-    static let end = "XPSETUP-END"  // our own marker that ends a reply (kept for the vendor-style queries in tests)
     static func cmd(_ s: String) -> Data { Data((s + "\r\n").utf8) }
 
     /// Joins a Wi-Fi network (STA mode, address via DHCP) and restarts the Wi-Fi module.
@@ -25,8 +24,6 @@ public enum XprinterCommand {
         return String(reply[b.upperBound..<e.lowerBound])
     }
 
-    /// Full printer configuration as "Key: Value" lines.
-    public static let readConfig = cmd("ALLCONFIG\r\nOUT \"\(end)\"")
     public static let selfTest = cmd("SELFTEST")
 
     /// Feeds 2-3 labels without printing, measures label and gap length and switches the sensor to gap labels.
