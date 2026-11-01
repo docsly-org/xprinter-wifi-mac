@@ -4,7 +4,7 @@ Everything this project learned about talking to the printer, so new features ca
 
 Source of each fact:
 - **✅ verified** — tried on a real XP-420B (firmware 1.040.3552, Wi-Fi module X4_V95.0.9) and the result read back.
-- **🔍 vendor tool** — this is what Xprinter's *Diagnostic Tool* (Windows) sends; not tried on the printer.
+- **🔍 vendor tool** — this is what Xprinter's *Diagnostic Tool* (Windows) sends; not tried on the printer. Analysed versions: **V1.036** (2024) and **V1.039b** (Dec 2025) — the commands used here are the same in both.
 - **📘 TSPL** — standard TSPL behaviour, not tried.
 
 The commands were identified for interoperability. No vendor code is in this repository.
@@ -120,6 +120,8 @@ The vendor tool reads the Wi-Fi extras with:
 | `NET IP "…"`, `NET DHCP`, `NET NAME "…"` | Ethernet models | 🔍 |
 | `BT NAME "…"`, `BT PIN "…"` | Bluetooth models | 🔍 |
 | `SOUND 5,500` | beep | 🔍 |
+| `SET CONTINUE_CUTTER ON/OFF`, `SET BACK ON/OFF` | continuous cutter mode / back-feed after cut (cutter models; new in V1.039b) | 🔍 |
+| `^XA … ^XZ`, `^RS…`, `^RW…`, `^RFW…`, `^RFR…` | ZPL commands for RFID models (new in V1.039b): these printers also accept ZPL | 🔍 |
 
 ### Calibration
 
