@@ -1,87 +1,112 @@
-<img src="Assets/AppIcon.png" width="128" alt="">
+<p align="center"><img src="Assets/AppIcon.png" width="128" alt="Xprinter Setup app icon"></p>
 
-# Xprinter Setup for macOS
-
-Connect an **Xprinter XP-420B** label printer to Wi-Fi from a Mac — no Windows, no vendor tool, no wasted labels.
-Pick your network, type the password, press **Connect**. The app sends the settings over USB, asks the printer for its new address and adds it to macOS as a Wi-Fi printer.
-
-[Русская версия ниже](#русский)
+<h1 align="center">Xprinter Setup for macOS</h1>
 
 <p align="center">
-  <img src="Screenshots/setup-en.png" width="280" alt="">
-  <img src="Screenshots/done-en.png" width="280" alt="">
-  <img src="Screenshots/settings-en.png" width="250" alt="">
+  Set up Wi-Fi on an <b>Xprinter XP-420B</b> label printer from a Mac — no Windows, no vendor tool, no wasted labels.<br>
+  <b>English</b> · <a href="README.ru.md">Русский</a>
 </p>
+
+<p align="center">
+  <img src="Screenshots/setup-en.png" width="270" alt="Main window: choose a Wi-Fi network, type the password, press Connect">
+  <img src="Screenshots/done-en.png" width="270" alt="Printer ready to print over Wi-Fi, with its IP address and macOS printer name">
+  <img src="Screenshots/settings-en.png" width="230" alt="Printer Settings: darkness, speed, labels, calibration, printer's own network">
+</p>
+<p align="center"><sub>Connect · Ready to print · Printer Settings</sub></p>
+
+## What it does
+
+- **Connects the printer to your Wi-Fi in one click.** Pick a network (only 2.4 GHz ones are listed — the printer can't use 5 GHz), type the password, press **Connect**. The app sends the settings over USB, asks the printer for its new address and adds it to macOS as a Wi-Fi printer. No test pages.
+- **Recognizes a printer that is already set up**, and adds it to another Mac — found on the network, or by its address.
+- **Printer Settings** (⌘,) over USB, or over Wi-Fi without the cable: darkness, speed, rotate 180°, mirror, reprint after an error, fine position.
+- **Labels:** default label size for every app, and **Calibrate to the Roll** — the printer feeds 2–3 blank labels and learns their length.
+- **Printer status:** cover open, out of labels, paper jam.
+- **Fixes without the power button:** **Reconnect Wi-Fi** and **Restart Printer** (see [Known limitation](#known-printer-limitation-wi-fi-stays-healthy-for-about-30-minutes)).
+- **Printer's own network:** see and change the password of the printer's built-in Wi-Fi (factory password `12345678`).
+- English and Russian, following the system language. Universal app (Apple Silicon and Intel).
 
 ## Tested printer
 
 **Xprinter XP-420B (USB + Wi-Fi, 203 dpi, 108 mm)**, firmware 1.040.3552, Wi-Fi module X4_V95.0.9.
 
-That is the only printer it has been tested on. Other Xprinter label printers that speak TSPL and have the same Wi-Fi module will *probably* work, because the vendor's Windows tool uses the same commands for all of them — but this has not been checked. Reports are welcome in [Issues](../../issues).
+This is the only printer it was tested on. Other Xprinter label printers that speak TSPL and have the same Wi-Fi module will *probably* work, because the vendor's Windows tool uses the same commands for all of them — but this has not been checked. Reports are welcome in [Issues](../../issues).
 
-## Download
+## Install
 
-Get `Xprinter-Setup.zip` from [Releases](../../releases), unzip, and move **Xprinter Setup** to Applications.
-The app is not notarized: on first launch, right-click it → **Open** → **Open**.
-Requires macOS 13 or later (Apple Silicon and Intel).
+1. **Install the Xprinter macOS driver** from [xprintertech.com](https://www.xprintertech.com/) (Support → Download). macOS does not include it. The app can set up Wi-Fi without it, but printing needs it.
+2. Download `Xprinter-Setup.zip` from [Releases](../../releases/latest), unzip, move **Xprinter Setup** to Applications.
+3. The app is not notarized by Apple: on first launch, right-click it → **Open** → **Open**.
 
-**The Xprinter macOS driver is required** — macOS does not include it. Download it from [xprintertech.com](https://www.xprintertech.com/) (Support → Download) and install it first. The app can connect the printer to Wi-Fi and change its settings without the driver, but printing needs it.
+Requires macOS 13 or later.
 
 ## How to use
 
-0. Install the Xprinter driver (see above).
 1. Connect the printer with a USB cable and turn it on.
 2. Choose your Wi-Fi network, enter the password, press **Connect**.
-   The printer supports **2.4 GHz** networks only, so 5 GHz-only networks are not listed. macOS shows network names only to apps with Location access — allow it when asked, or choose **Other Network…** and type the name.
-3. Wait about 30 seconds. When you see **All set**, choose the new “… (Wi-Fi)” printer in any Print dialog and unplug the cable.
+3. In about 30 seconds the dot turns green: **Ready to print over Wi-Fi**. Choose “Xprinter XP-420B (Wi-Fi)” in any Print dialog and unplug the cable.
 
-Already set up? The app recognizes it and just says so; if the printer's Wi-Fi module dropped off the network or hung, it offers **Reconnect Wi-Fi** or **Restart Printer** (see the known limitation below); if the printer is on Wi-Fi but missing on this Mac, one click adds it — no password needed. Changing the Wi-Fi network itself requires the USB cable, so a typo in the password can't lock you out.
+**Tip:** reserve the printer's address in your router (DHCP reservation), so it never changes.
 
-Tip: reserve the printer's address in your router (DHCP reservation), so it never changes.
+**Another Mac?** Install the driver and open the app there. It finds the printer on the network, or asks for its address (shown in the app on the first Mac, or as `STA IP` on the self-test page), then **Add to This Mac**.
 
-**Another Mac?** Open the app on it: it finds the printer on the network by itself, or you type the printer's address (shown in the app on the first Mac, or as `STA IP` on the self-test page) and press **Add to This Mac**. The driver is needed on that Mac too.
+**New roll?** Printer Settings → Labels → **Calibrate to the Roll…** (USB). Then type the label width and height: that becomes the default paper size, so apps start with it.
 
-**New roll?** In Printer Settings → Labels press **Calibrate to the Roll…** (USB): the printer feeds 2–3 labels without printing on them and learns the label and gap length. Then set the width and height below.
+**Printer's own network.** The printer also broadcasts its own Wi-Fi (`XP-420B`) for direct connections without a router. With the factory password `12345678` anyone nearby can join it — change it in Printer Settings → Printer's Own Network (USB, WPA2). Printing from the Mac goes through your router and is not affected.
 
-**Label size.** In Printer Settings → Labels, type the width and height of your roll (for example 75 × 130 mm). It becomes the default paper size of the printer in macOS, so apps start with it. Change it when you load a roll of another size.
-
-**Printer's own network.** The printer also broadcasts its own Wi-Fi (`XP-420B`, factory password `12345678`, anyone nearby can join). Change the password in Printer Settings → Printer's Own Network (USB, WPA2); the current one is shown there too. Printing from the Mac goes through your router and is not affected.
-
-**Printer Settings (⌘,)** — over USB, or over Wi-Fi once the printer is set up (no cable needed), read from the printer and applied immediately: darkness (0–15), speed (2–6 in/s), rotate 180°, mirror, reprint after an error, fine position (tear-off offset, shift, origin), printer info. A test page is printed only when you ask for it.
-
-Deliberately **not** included, to keep the printer safe: factory/head calibration commands, factory reset (it would also erase Wi-Fi settings), firmware and file operations, changing the printer's own access point, and paper-sensor calibration (feeds several labels; may be added after testing).
+**Connection.** By default the app uses USB when the cable is plugged in and Wi-Fi otherwise. Printer Settings → Connection lets you force one. Changing the Wi-Fi network always needs the cable, so a typo in the password can't lock you out.
 
 ## Known printer limitation: Wi-Fi stays healthy for about 30 minutes
 
 Found while building this app, on an XP-420B with Wi-Fi module X4_V95.0.9 and a Xiaomi router. Repeated four times, with and without traffic:
 
-- About **30–35 minutes after the Wi-Fi module starts**, it goes bad on its own: it either **drops off the network** (no ping), or keeps the connection but **hangs mid-transfer** — and then the whole printer stops answering, even on USB, with the blue light still on.
+- About **30–35 minutes after the Wi-Fi module starts**, it goes bad on its own: it either **drops off the network**, or keeps the connection but **hangs mid-transfer** — and then the whole printer stops answering, even on USB, with the blue light still on.
 - At that point printing over Wi-Fi fails too. Printing over **USB is not affected** while the printer itself is not stuck.
 - It is **not the driver** (the tests talked to the printer directly) and **not load** (it happens after 30 minutes of complete silence too).
 - A guess, not verified: many cheap Wi-Fi modules break when the router renews its encryption keys; the timing fits.
 
-**What helps, all verified on the printer, all keep the settings:**
+**What helps — all verified on the printer, all keep the settings:**
 
 | Problem | Fix |
 |---|---|
-| Dropped off the network | **Reconnect Wi-Fi** in the app (sends `WIFI RESET` over USB) — back in ~6 s |
+| Dropped off the network | **Reconnect Wi-Fi** in the app (`WIFI RESET` over USB) — back in ~6 s |
 | Printer stuck, no answer even on USB | **Restart Printer** in the app (the vendor's "Reset Printer": `ESC ! exit`, `ESC ! R`) — back in ~6 s |
 | No cable at hand | Turn the printer off and on |
 
-Over the network the module cannot be fixed: a broken module does not pass the fix either. The app also asks the printer for replies over Wi-Fi as rarely as possible.
+A broken module can't be fixed over the network: it does not pass the fix either. The app asks the printer for replies over Wi-Fi as rarely as possible and never polls it in the background.
 
-**If you rely on Wi-Fi printing**, try on your router (not verified yet): a separate 2.4 GHz network name, a fixed channel (1, 6 or 11), band steering / "smart connect" off, and a longer group key update interval if the router has that setting. If you find a setting that keeps the printer alive longer than 30 minutes, please open an issue.
+**If you rely on Wi-Fi printing**, try on your router (not verified yet): a separate 2.4 GHz network name, a fixed channel (1, 6 or 11), band steering / "smart connect" off, a longer group key update interval if available. If a setting keeps the printer alive longer than 30 minutes, please open an issue.
 
-**Never** send `ESC ! C`: in the vendor's tool that is "Factory Default" and erases all settings, Wi-Fi included.
+## FAQ
+
+**macOS says the app can't be checked for malicious software.** It is not notarized (that needs a paid Apple developer account). Right-click → **Open** → **Open** once.
+
+**Why does it ask for my location?** macOS shows Wi-Fi network names only to apps with Location access. The app asks only when you choose a network, and uses it only for that list. You can deny it and type the network name under **Other Network…**.
+
+**My network is not in the list.** The printer works with 2.4 GHz only; 5 GHz-only networks are hidden. If your router uses one name for both bands, it is listed; otherwise turn on 2.4 GHz on the router.
+
+**The printer is not found / “Not responding”.** Plug in the USB cable: the app offers **Reconnect Wi-Fi** or **Restart Printer**. Without the cable, turn the printer off and on.
+
+**Printing slides across the labels.** Calibrate to the roll (Printer Settings → Labels). After calibration the printer feeds one label when you close the cover — that aligns it to the gap and is normal.
+
+**Printing fails: “driver not installed”.** Install the Xprinter macOS driver (see Install).
+
+## What is deliberately not included
+
+To keep the printer safe: factory reset (`ESC ! C` — it erases everything, Wi-Fi included), factory/head calibration commands, firmware and file operations, a fixed IP address on the printer (reserve it in the router instead), open or WEP security for the printer's own network. Not available on the XP-420B: cutter, peeler, ribbon, Ethernet, Bluetooth.
+
+## Privacy
+
+The app stores nothing but your connection choice and, if you typed one, the printer's address. It talks only to the printer (USB, or your local network) and to macOS printing. No analytics, no internet access. Your Wi-Fi password goes straight to the printer and is not saved.
 
 ## The problem this solves
 
-- Xprinter XP-420B Wi-Fi setup on Mac / macOS
+- How to set up Wi-Fi on an Xprinter XP-420B on a Mac / MacBook / macOS
 - XP-420B does not connect to Wi-Fi, only shows its own network `XP-420B` (password `12345678`)
 - `10.10.100.1` does not open, `ERR_CONNECTION_REFUSED`, no web configuration page
-- Self-test page shows `STA IP: 0.0.0.0`
-- Xprinter Diagnostic Tool / Wi-Fi config tool is Windows-only
-- Print Label app does not find the printer
+- The self-test page shows `STA IP: 0.0.0.0`
+- Xprinter Diagnostic Tool / Wi-Fi config tool works only on Windows
+- The Print Label app does not find the printer
+- The printer drops off Wi-Fi after a while
 
 ## Protocol
 
@@ -89,21 +114,25 @@ Plain TSPL text sent raw to the printer over USB (bulk endpoints of the printer-
 
 | Command | Effect |
 |---|---|
-| `WIFI CONNECTION "<ssid>","<password>"` | Join a Wi-Fi network (STA mode, DHCP) |
+| `WIFI CONNECTION "<ssid>","<password>"` | Join a Wi-Fi network (DHCP) |
 | `WIFI RESET` | Restart the Wi-Fi module to apply settings |
 | `WIFI GETIP` | Reply `+OK=<address>` (`0.0.0.0` when not connected) |
+| `WIFI SETAP "<name>",3,"<password>"` | Printer's own network; `3` = WPA2, `2` = WPA |
 | `ALLCONFIG` | Reply with all settings as `Key: Value` lines |
 | `OUT "<text>"` | Echo text back — handy as an end-of-reply marker |
 | `DENSITY n` (0–15), `SPEED n` (2–6), `DIRECTION r,m`, `SET REPRINT ON/OFF`, `OFFSET n dot`, `SHIFT x,y`, `REFERENCE x,y` | Print settings, stored in the printer |
+| `GAPDETECT` | Calibrate to labels with gaps (feeds 2–3 labels) |
+| `ESC ! ?` | Status byte: `0x01` cover open (verified); `0x02` jam, `0x04` out of paper (per TSPL, not verified) |
+| `ESC ! exit`, `ESC ! R` | Soft restart ("Reset Printer"); settings are kept |
 | `SELFTEST` | Print the self-test page |
 
-Strings have no escaping, so the network name and password cannot contain `"`. Without the app, from Terminal:
+Strings have no escaping, so names and passwords cannot contain `"`. Without the app, from Terminal:
 
 ```sh
 printf 'WIFI CONNECTION "MyWiFi","password"\r\nWIFI RESET\r\n' | lp -d Xprinter_XP_420B -o raw
 ```
 
-The commands were identified for interoperability by examining what the vendor's Windows tool sends, and every command above was verified on a real XP-420B by writing a value and reading it back. No vendor code is included in this repository.
+The commands were identified for interoperability by examining what the vendor's Windows tool sends, and every command above was verified on a real XP-420B unless marked otherwise. No vendor code is included in this repository.
 
 ## Build from source
 
@@ -116,49 +145,4 @@ XPRINTER_LIVE=1 swift test         # plus a read-only check with a printer on US
 
 ## Disclaimer
 
-This is a free, unofficial project, not affiliated with Xprinter. It is provided **“as is”, without warranty of any kind** — you use it at your own risk. The authors are not liable for any damage to your printer, data or anything else. See [LICENSE](LICENSE) (MIT).
-
----
-
-## Русский
-
-Бесплатная программа для Mac, которая подключает принтер этикеток **Xprinter XP-420B** к Wi‑Fi — без Windows, без фирменной утилиты и без лишних этикеток. Выберите сеть, введите пароль, нажмите «Подключить»: программа отправит настройки по USB, узнает у принтера новый адрес и сама добавит его в macOS как Wi‑Fi принтер. Язык интерфейса — как в системе (русский или английский).
-
-<p align="center">
-  <img src="Screenshots/setup-ru.png" width="280" alt="">
-  <img src="Screenshots/done-ru.png" width="280" alt="">
-  <img src="Screenshots/settings-ru.png" width="250" alt="">
-</p>
-
-**Проверено на:** Xprinter XP-420B (USB + Wi‑Fi, 203 dpi, 108 мм), прошивка 1.040.3552, модуль Wi‑Fi X4_V95.0.9. На других моделях Xprinter с таким же модулем Wi‑Fi программа, вероятно, тоже заработает, но это не проверялось — напишите в [Issues](../../issues), если попробуете.
-
-**Установка:** скачайте `Xprinter-Setup.zip` в [Releases](../../releases), распакуйте, перенесите в «Программы». При первом запуске: правый клик → «Открыть» → «Открыть» (программа не нотаризована). Нужна macOS 13 или новее.
-
-**Нужен драйвер Xprinter для macOS** — в macOS его нет. Скачайте его на [xprintertech.com](https://www.xprintertech.com/) (Support → Download) и установите заранее. Подключить принтер к Wi‑Fi и менять настройки программа может и без драйвера, но для печати он нужен.
-
-**Как пользоваться:**
-
-0. Установите драйвер Xprinter (см. выше).
-1. Подключите принтер кабелем USB и включите.
-2. Выберите сеть, введите пароль, нажмите «Подключить». Принтер работает **только с 2,4 ГГц**, поэтому сети только на 5 ГГц не показаны. Список сетей macOS показывает только с разрешением на геолокацию — разрешите или выберите «Другая сеть…».
-3. Через ~30 секунд появится «Готово» — выбирайте новый принтер «(Wi-Fi)» в окне печати, кабель можно отключить.
-
-Если принтер уже настроен, программа это видит и просто сообщает об этом; если он в Wi‑Fi, но не добавлен на этот Mac — добавляет одной кнопкой, без пароля. Сменить сеть Wi‑Fi можно только по кабелю USB — так опечатка в пароле не отрежет принтер от управления.
-
-**Другой Mac?** Запустите программу на нём: она сама найдёт принтер в сети или попросит ввести его адрес (он есть в программе на первом Mac или в строке `STA IP` на тестовой странице) — и добавит его кнопкой «Добавить на этот Mac». Драйвер нужен и на нём.
-
-**Новый рулон?** В «Настройках принтера → Этикетки» нажмите «Откалибровать по рулону…» (по USB): принтер прогонит 2–3 этикетки, ничего на них не печатая, и запомнит длину этикетки и промежутка. Затем укажите ширину и высоту ниже.
-
-**Размер этикеток.** В «Настройках принтера → Этикетки» укажите ширину и высоту рулона (например, 75 × 130 мм) — это станет размером бумаги по умолчанию, и программы будут сразу печатать в нём. Сменили рулон — поменяйте размер.
-
-**Собственная сеть принтера.** Принтер раздаёт и свою сеть Wi‑Fi (`XP-420B`, заводской пароль `12345678` — подключиться может любой рядом). Смените пароль в «Настройках принтера → Собственная сеть принтера» (по USB, WPA2); там же виден текущий пароль. Печать с Mac идёт через роутер, её это не затрагивает.
-
-**Настройки принтера (⌘,)** — по USB, а после настройки и по Wi‑Fi, без кабеля: плотность, скорость, поворот, зеркальная печать, повтор после ошибки, точное положение, сведения о принтере. Тестовая страница печатается только по вашему запросу.
-
-**Типичные проблемы, которые решает программа:** XP-420B не подключается к Wi‑Fi, видна только сеть `XP-420B` (пароль `12345678`); не открывается `10.10.100.1`; на тестовой странице `STA IP: 0.0.0.0`; утилита Xprinter Diagnostic Tool работает только на Windows; приложение Print Label не находит принтер; как настроить Wi‑Fi принтера этикеток Xprinter на MacBook.
-
-**Известное ограничение принтера: Wi‑Fi работает около 30 минут.** Выяснено при разработке на XP-420B с модулем X4_V95.0.9 и роутером Xiaomi, повторено 4 раза — с нагрузкой и без. Примерно через **30–35 минут после запуска модуля Wi‑Fi** он сам начинает сбоить: либо **выпадает из сети**, либо **зависает посреди передачи** — и тогда весь принтер перестаёт отвечать, даже по USB, хотя синий индикатор горит. Печать по Wi‑Fi в этот момент тоже не проходит; **печать по USB это не затрагивает**. Драйвер и нагрузка ни при чём (сбой случается и после 30 минут полной тишины). Догадка, не проверенная: модуль ломается, когда роутер обновляет ключи шифрования.
-
-Что помогает (проверено, настройки сохраняются): **«Переподключить Wi‑Fi»** в программе, если принтер выпал из сети (`WIFI RESET` по USB, ~6 с); **«Перезапустить принтер»**, если он завис совсем (как кнопка «Reset Printer» в утилите Xprinter: `ESC ! exit`, `ESC ! R`, ~6 с); без кабеля — выключить и включить. По сети испорченный модуль не вылечить. Если печатаете по Wi‑Fi постоянно, попробуйте в роутере (пока не проверено): отдельную сеть 2,4 ГГц, фиксированный канал (1, 6 или 11), выключить «умное» переключение диапазонов, увеличить интервал обновления группового ключа. Нашли настройку, при которой принтер живёт дольше 30 минут, — напишите в Issues. **Никогда** не отправляйте `ESC ! C` — это сброс к заводским настройкам.
-
-**Отказ от ответственности.** Программа бесплатная и неофициальная, не связана с компанией Xprinter. Она предоставляется **«как есть», без каких-либо гарантий** — вы используете её на свой страх и риск. Авторы не несут ответственности за возможный ущерб принтеру, данным или чему-либо ещё. Лицензия — [MIT](LICENSE).
+Free and unofficial, not affiliated with Xprinter. Provided **“as is”, without warranty of any kind** — you use it at your own risk. The authors are not liable for any damage to your printer, data or anything else. [MIT License](LICENSE).
