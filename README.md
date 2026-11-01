@@ -95,6 +95,8 @@ A broken module can't be fixed over the network: it does not pass the fix either
 
 **Printing slides across the labels.** Calibrate to the roll (Printer Settings → Labels). After calibration the printer feeds one label when you close the cover — that aligns it to the gap and is normal.
 
+**Chrome (or Comet, Yandex, Edge) doesn't list the printer.** Chromium browsers show only the default and recently used printers; open the **Printer** list → **See more…**. Better for labels: press **⌥⌘P** (or “Print using system dialog”) — the macOS dialog lists every printer and uses the label size and driver settings. Safari and Firefox use that dialog already.
+
 **Printing fails: “driver not installed”.** Install the Xprinter macOS driver (see Install).
 
 ## What is deliberately not included
