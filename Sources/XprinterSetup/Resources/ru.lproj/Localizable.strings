@@ -109,3 +109,6 @@
 "Password changed." = "Пароль изменён.";
 "The printer broadcasts its own Wi-Fi so you can connect without a router. WPA2 protection. Needs the USB cable." = "Принтер раздаёт свою сеть Wi‑Fi, чтобы к нему можно было подключиться без роутера. Защита WPA2. Нужен кабель USB.";
 "The printer did not confirm the new password. Check this section again in a minute." = "Принтер не подтвердил новый пароль. Загляните в этот раздел ещё раз через минуту.";
+"Current password" = "Текущий пароль";
+"Show" = "Показать";
+"Hide" = "Скрыть";

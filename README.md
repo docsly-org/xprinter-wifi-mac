@@ -45,6 +45,8 @@ Tip: reserve the printer's address in your router (DHCP reservation), so it neve
 
 **Label size.** In Printer Settings → Labels, type the width and height of your roll (for example 75 × 130 mm). It becomes the default paper size of the printer in macOS, so apps start with it. Change it when you load a roll of another size.
 
+**Printer's own network.** The printer also broadcasts its own Wi-Fi (`XP-420B`, factory password `12345678`, anyone nearby can join). Change the password in Printer Settings → Printer's Own Network (USB, WPA2); the current one is shown there too. Printing from the Mac goes through your router and is not affected.
+
 **Printer Settings (⌘,)** — over USB, or over Wi-Fi once the printer is set up (no cable needed), read from the printer and applied immediately: darkness (0–15), speed (2–6 in/s), rotate 180°, mirror, reprint after an error, fine position (tear-off offset, shift, origin), printer info. A test page is printed only when you ask for it.
 
 Deliberately **not** included, to keep the printer safe: factory/head calibration commands, factory reset (it would also erase Wi-Fi settings), firmware and file operations, changing the printer's own access point, and paper-sensor calibration (feeds several labels; may be added after testing).
@@ -148,6 +150,8 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 **Новый рулон?** В «Настройках принтера → Этикетки» нажмите «Откалибровать по рулону…» (по USB): принтер прогонит 2–3 этикетки, ничего на них не печатая, и запомнит длину этикетки и промежутка. Затем укажите ширину и высоту ниже.
 
 **Размер этикеток.** В «Настройках принтера → Этикетки» укажите ширину и высоту рулона (например, 75 × 130 мм) — это станет размером бумаги по умолчанию, и программы будут сразу печатать в нём. Сменили рулон — поменяйте размер.
+
+**Собственная сеть принтера.** Принтер раздаёт и свою сеть Wi‑Fi (`XP-420B`, заводской пароль `12345678` — подключиться может любой рядом). Смените пароль в «Настройках принтера → Собственная сеть принтера» (по USB, WPA2); там же виден текущий пароль. Печать с Mac идёт через роутер, её это не затрагивает.
 
 **Настройки принтера (⌘,)** — по USB, а после настройки и по Wi‑Fi, без кабеля: плотность, скорость, поворот, зеркальная печать, повтор после ошибки, точное положение, сведения о принтере. Тестовая страница печатается только по вашему запросу.
 

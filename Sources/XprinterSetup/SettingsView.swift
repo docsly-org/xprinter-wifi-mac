@@ -10,6 +10,7 @@ struct SettingsView: View {
     @State private var newAPPassword = ""
     @State private var changingAP = false
     @State private var apChanged = false
+    @State private var showAPPassword = false
     @State private var showPosition = Demo.isOn
 
     var body: some View {
@@ -83,6 +84,19 @@ struct SettingsView: View {
                 if c.hasWiFi, let name = c.accessPointName {
                     Section {
                         info("Network name", name)
+                        if let pin = c.accessPointPassword {
+                            LabeledContent {
+                                HStack(spacing: 6) {
+                                    Text(verbatim: showAPPassword ? pin : String(repeating: "•", count: pin.count))
+                                        .textSelection(.enabled).monospaced()
+                                    Button { showAPPassword.toggle() } label: {
+                                        Image(systemName: showAPPassword ? "eye.slash" : "eye")
+                                    }
+                                    .buttonStyle(.borderless)
+                                    .help(showAPPassword ? Text("Hide", bundle: .module) : Text("Show", bundle: .module))
+                                }
+                            } label: { Text("Current password", bundle: .module) }
+                        }
                         LabeledContent {
                             HStack(spacing: 6) {
                                 SecureField(text: $newAPPassword, prompt: Text("8–63 characters", bundle: .module)) { EmptyView() }
