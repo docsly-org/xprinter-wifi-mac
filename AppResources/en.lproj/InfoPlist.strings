@@ -1,0 +1,3 @@
+"NSLocationUsageDescription" = "macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks when connecting the printer.";
+"NSLocationWhenInUseUsageDescription" = "macOS shows Wi-Fi network names only to apps with Location access. Used only to list networks when connecting the printer.";
+"NSLocalNetworkUsageDescription" = "Talks to your Xprinter over Wi-Fi to show and change its settings.";

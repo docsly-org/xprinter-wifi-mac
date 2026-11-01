@@ -12,6 +12,7 @@ cp "$BIN/XprinterSetup" "$APP/Contents/MacOS/"
 cp -R "$BIN"/*.bundle "$APP/Contents/Resources/"
 cp Info.plist "$APP/Contents/"
 cp Assets/AppIcon.icns "$APP/Contents/Resources/"
+cp -R AppResources/*.lproj "$APP/Contents/Resources/"  # localized permission texts (InfoPlist.strings)
 codesign --force --deep -s - "$APP"
 
 (cd dist && ditto -c -k --keepParent "Xprinter Setup.app" "Xprinter-Setup.zip")

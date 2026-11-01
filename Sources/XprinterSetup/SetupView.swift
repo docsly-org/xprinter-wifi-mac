@@ -29,7 +29,6 @@ struct SetupView: View {
             }
         }
         .onAppear {
-            wifi.scan()
             if Demo.isOn { openWindow(id: "settings") }
         }
         .onChange(of: printer.setupCompleted) { _ in changeNetwork = false }
@@ -230,6 +229,7 @@ struct SetupView: View {
         }
         .formStyle(.grouped)
         .scrollDisabled(true)
+        .onAppear { wifi.scan() }  // asks for Location only when the network list is really needed
         .safeAreaInset(edge: .bottom) {
             HStack {
                 Spacer()
