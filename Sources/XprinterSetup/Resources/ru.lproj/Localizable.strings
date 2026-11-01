@@ -101,3 +101,10 @@
 "Labels with gaps: %@ mm, gap %@ mm" = "Этикетки %@ мм, промежуток %@ мм";
 "Black mark" = "Чёрная метка";
 "Continuous paper — not calibrated" = "Непрерывная лента — не откалиброван";
+"8–63 characters" = "8–63 символа";
+"Change" = "Сменить";
+"New password" = "Новый пароль";
+"Printer’s Own Network" = "Собственная сеть принтера";
+"The factory password 12345678 is still set — anyone nearby can join and use the printer. Change it." = "Стоит заводской пароль 12345678 — любой рядом может подключиться к принтеру и пользоваться им. Смените его.";
+"Password changed." = "Пароль изменён.";
+"The printer broadcasts its own Wi-Fi so you can connect without a router. WPA2 protection. Needs the USB cable." = "Принтер раздаёт свою сеть Wi‑Fi, чтобы к нему можно было подключиться без роутера. Защита WPA2. Нужен кабель USB.";

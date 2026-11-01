@@ -20,6 +20,16 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertFalse(Array(XprinterCommand.restartPrinter).suffix(3) == [27, 33, 67])
     }
 
+    func testAccessPoint() {
+        XCTAssertEqual(String(decoding: XprinterCommand.setAccessPoint(name: "XP-420B", password: "secret123"), as: UTF8.self),
+                       "WIFI SETAP \"XP-420B\",3,\"secret123\"\r\nWIFI RESET\r\n")  // 3 = WPA2, checked on the printer
+        XCTAssertTrue(XprinterCommand.isValidAccessPointPassword("12345678"))
+        XCTAssertFalse(XprinterCommand.isValidAccessPointPassword("short"))
+        XCTAssertFalse(XprinterCommand.isValidAccessPointPassword("with\"quote1"))
+        XCTAssertFalse(XprinterCommand.isValidAccessPointPassword("пароль-кириллицей"))
+        XCTAssertEqual(PrinterConfig(report: "Wifi Pin: 12345678").accessPointPassword, "12345678")
+    }
+
     func testValidation() {
         XCTAssertThrowsError(try XprinterCommand.validate(ssid: "", password: "12345678"))
         XCTAssertThrowsError(try XprinterCommand.validate(ssid: "a\"b", password: "12345678"))

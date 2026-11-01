@@ -16,6 +16,7 @@ enum Demo {
         XP-420B Version: 1.040.3552 CEZD
         Wifi : YES
         Wifi Name: XP-420B
+        Wifi Pin: 12345678
         Wifi Sta Ip: \(ip)
         Wifi Versions: X4_V95.0.9
         Density: 8.0

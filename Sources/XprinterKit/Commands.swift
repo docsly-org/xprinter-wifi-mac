@@ -41,6 +41,20 @@ public enum XprinterCommand {
     public static func shift(x: Int, y: Int) -> Data { cmd("SHIFT \(x),\(y)") }
     public static func reference(x: Int, y: Int) -> Data { cmd("REFERENCE \(x),\(y)") }
 
+    /// Factory password of the printer's own network.
+    public static let defaultAccessPointPassword = "12345678"
+
+    /// Sets the password of the printer's own network (it keeps its name) and restarts the Wi-Fi module.
+    /// Security 3 = WPA2: checked on an XP-420B by scanning the network (2 gives old WPA). 0 and 1 are never used.
+    public static func setAccessPoint(name: String, password: String) -> Data {
+        cmd("WIFI SETAP \"\(name)\",3,\"\(password)\"\r\nWIFI RESET")
+    }
+
+    /// WPA2 password rules plus TSPL's "no double quote".
+    public static func isValidAccessPointPassword(_ p: String) -> Bool {
+        (8...63).contains(p.count) && p.allSatisfy { $0.isASCII && !$0.isNewline && $0 != "\"" }
+    }
+
     public enum ValidationError: Error, Equatable {
         case emptySSID, quoteInSSID, quoteInPassword, shortPassword
     }

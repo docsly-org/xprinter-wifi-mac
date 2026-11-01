@@ -305,6 +305,22 @@ final class PrinterModel: ObservableObject {
         }
     }
 
+    /// New password for the printer's own network (USB only). Returns true when the printer stored it.
+    func setAccessPointPassword(_ password: String) async -> Bool {
+        guard !Demo.isOn, usbPlugged, let name = config?.accessPointName,
+              XprinterCommand.isValidAccessPointPassword(password) else { return false }
+        settingsError = nil
+        do {
+            try await Self.background { try Xprinter.send(XprinterCommand.setAccessPoint(name: name, password: password), via: .usb) }
+        } catch {
+            settingsError = error.localizedDescription
+            return false
+        }
+        try? await Task.sleep(nanoseconds: 10_000_000_000)  // the Wi-Fi module restarts
+        await reload()
+        return config?.accessPointPassword == password
+    }
+
     /// Soft restart over USB ("Reset Printer"). Settings are kept; Wi-Fi comes back about 10 s later.
     func restartPrinter() { restart(XprinterCommand.restartPrinter, wait: 15) }
     /// Restarts only the Wi-Fi module over USB.

@@ -50,6 +50,7 @@ public struct PrinterConfig: Equatable {
     public var wifiIP: String? { values["Wifi Sta Ip"].flatMap { $0 == "0.0.0.0" || $0.isEmpty ? nil : $0 } }
     public var wifiModule: String? { values["Wifi Versions"] }
     public var accessPointName: String? { values["Wifi Name"] }
+    public var accessPointPassword: String? { values["Wifi Pin"] }
 
     public enum Sensor: Equatable { case gap, blackMark, continuous }
     /// "GAP", "BLINE…" or "CONTINUOUS(T)".

@@ -7,6 +7,9 @@ struct SettingsView: View {
     @State private var density = 8.0
     @State private var confirmTestPage = false
     @State private var confirmCalibration = false
+    @State private var newAPPassword = ""
+    @State private var changingAP = false
+    @State private var apChanged = false
     @State private var showPosition = Demo.isOn
 
     var body: some View {
@@ -77,12 +80,40 @@ struct SettingsView: View {
                     Text("Values are in dots: 8 dots = 1 mm.", bundle: .module).font(.callout).foregroundStyle(.secondary)
                 }
 
+                if c.hasWiFi, let name = c.accessPointName {
+                    Section {
+                        info("Network name", name)
+                        LabeledContent {
+                            HStack(spacing: 6) {
+                                SecureField(text: $newAPPassword, prompt: Text("8–63 characters", bundle: .module)) { EmptyView() }
+                                    .labelsHidden().textFieldStyle(.roundedBorder).frame(width: 150)
+                                if changingAP { ProgressView().controlSize(.small) }
+                                Button { changeAPPassword() } label: { Text("Change", bundle: .module) }
+                                    .disabled(!printer.usbPlugged || changingAP || !XprinterCommand.isValidAccessPointPassword(newAPPassword))
+                            }
+                        } label: { Text("New password", bundle: .module) }
+                    } header: { Text("Printer’s Own Network", bundle: .module) }
+                      footer: {
+                        VStack(alignment: .leading, spacing: 4) {
+                            if c.accessPointPassword == XprinterCommand.defaultAccessPointPassword {
+                                Label { Text("The factory password 12345678 is still set — anyone nearby can join and use the printer. Change it.", bundle: .module) }
+                                    icon: { Image(systemName: "exclamationmark.triangle.fill") }
+                                    .foregroundStyle(.orange)
+                            } else if apChanged {
+                                Label { Text("Password changed.", bundle: .module) } icon: { Image(systemName: "checkmark.circle.fill") }
+                                    .foregroundStyle(.green)
+                            }
+                            Text("The printer broadcasts its own Wi-Fi so you can connect without a router. WPA2 protection. Needs the USB cable.", bundle: .module)
+                        }
+                        .font(.callout).foregroundStyle(.secondary)
+                    }
+                }
+
                 Section {
                     info("Model", c.model)
                     info("Firmware", c.firmware)
                     if c.hasWiFi {
                         info("Wi-Fi address", c.wifiIP ?? loc("Not connected"))
-                        info("Printer’s own network", c.accessPointName)
                         info("Wi-Fi module", c.wifiModule)
                     }
                     Button { confirmTestPage = true } label: { Text("Print Test Page…", bundle: .module) }
@@ -128,6 +159,15 @@ struct SettingsView: View {
             }
             .padding(40)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+
+    private func changeAPPassword() {
+        changingAP = true; apChanged = false
+        Task {
+            apChanged = await printer.setAccessPointPassword(newAPPassword)
+            if apChanged { newAPPassword = "" }
+            changingAP = false
         }
     }
 
