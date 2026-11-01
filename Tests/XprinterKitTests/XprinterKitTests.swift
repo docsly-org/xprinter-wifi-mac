@@ -104,6 +104,15 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertNil(PrinterConfig(report: "Gap Size: 0.0").gapDots)
     }
 
+    func testReplyMarkersIgnoreLeftovers() {
+        let q = XprinterCommand.query("ALLCONFIG")
+        XCTAssertTrue(String(decoding: q.data, as: UTF8.self).hasPrefix("OUT \"\(q.begin)\"\r\nALLCONFIG\r\nOUT \"\(q.end)\""))
+        // a tail of an earlier reply (seen on the printer) comes first and must be ignored
+        let reply = "Speed: 6 Inch\r\nXPSETUP-END\r\n\(q.begin)\r\nXP-420B Version: 1\r\nSensor Mode: GAP\r\n\(q.end)\r\n"
+        XCTAssertEqual(XprinterCommand.slice(reply, begin: q.begin, end: q.end), "\r\nXP-420B Version: 1\r\nSensor Mode: GAP\r\n")
+        XCTAssertNil(XprinterCommand.slice("XPSETUP-END\r\n", begin: q.begin, end: q.end))
+    }
+
     func testOkReply() {
         XCTAssertEqual(PrinterConfig.okValue("+OK=192.168.1.50\r\nXPSETUP-END\r\n"), "192.168.1.50")
         XCTAssertNil(PrinterConfig.okValue("garbage"))
@@ -155,7 +164,7 @@ final class XprinterKitTests: XCTestCase {
         XCTAssertNotNil(c.model)
         XCTAssertNotNil(c.density)
         print("LIVE model=\(c.model ?? "-") fw=\(c.firmware ?? "-") density=\(c.density ?? -1) speed=\(c.speed ?? -1) wifi=\(c.wifiIP ?? "-")")
-        print("LIVE wifiIP=\(try Xprinter.wifiIP() ?? "-")")
+        // no Xprinter.wifiIP() here: WIFI GETIP asks the Wi-Fi module, and a module past its ~30 minutes hangs the printer
         print("LIVE status=\(String(describing: try Xprinter.status()))")
     }
 

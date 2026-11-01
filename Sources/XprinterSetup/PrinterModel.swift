@@ -261,18 +261,23 @@ final class PrinterModel: ObservableObject {
 
     // MARK: Printer settings
 
-    /// Sends a setting. Over USB the configuration is read back, so the UI shows what the printer really stored;
-    /// over Wi-Fi the sent values are shown instead (a read-back would cost a reply, see NetworkPrinter).
+    /// Sends a setting and shows the new value at once. Over USB the configuration is read back a moment later,
+    /// so the UI ends up showing what the printer really stored (it needs a little time, e.g. to re-measure the sensor);
+    /// over Wi-Fi the read-back is skipped (every reply costs, see NetworkPrinter).
     func apply(_ command: Data, shows changes: [String: String] = [:]) {
         guard !Demo.isOn else { return }  // demo never talks to a printer
+        config = config?.with(changes)
         Task {
             do {
                 guard let link else { throw USBPrinter.NotConnected() }
                 try await Self.background { try Xprinter.send(command, via: link) }
                 settingsError = nil
-                if case .network = link { config = config?.with(changes) } else { await reload() }
+                if link == .usb, let fresh = try? await Self.background({ try Xprinter.config(via: .usb) }) {
+                    config = fresh  // an incomplete read keeps what is shown
+                }
             } catch {
                 settingsError = error.localizedDescription
+                if let link, let fresh = try? await Self.background({ try Xprinter.config(via: link) }) { config = fresh }
             }
         }
     }

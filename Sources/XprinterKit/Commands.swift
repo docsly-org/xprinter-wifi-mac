@@ -3,7 +3,7 @@ import Foundation
 /// TSPL commands for Xprinter label printers. Every command here was checked on an XP-420B
 /// (firmware 1.040.3552) by writing a value and reading it back from ALLCONFIG.
 public enum XprinterCommand {
-    static let end = "XPSETUP-END"  // our own marker that ends a reply
+    static let end = "XPSETUP-END"  // our own marker that ends a reply (kept for the vendor-style queries in tests)
     static func cmd(_ s: String) -> Data { Data((s + "\r\n").utf8) }
 
     /// Joins a Wi-Fi network (STA mode, address via DHCP) and restarts the Wi-Fi module.
@@ -11,10 +11,22 @@ public enum XprinterCommand {
         cmd("WIFI CONNECTION \"\(ssid)\",\"\(password)\"\r\nWIFI RESET")
     }
 
+    /// Wraps a query in unique begin/end markers. A reply left over from an earlier exchange (not read to the end)
+    /// arrives first on the next read; only the text between this query's own markers is used.
+    static func query(_ body: String) -> (data: Data, begin: String, end: String) {
+        let id = UUID().uuidString.prefix(8)
+        let begin = "XPSETUP-B-\(id)", end = "XPSETUP-E-\(id)"
+        return (cmd("OUT \"\(begin)\"\r\n\(body)\r\nOUT \"\(end)\""), begin, end)
+    }
+
+    /// The reply between the markers, or nil when it is incomplete.
+    static func slice(_ reply: String, begin: String, end: String) -> String? {
+        guard let b = reply.range(of: begin), let e = reply.range(of: end, range: b.upperBound..<reply.endIndex) else { return nil }
+        return String(reply[b.upperBound..<e.lowerBound])
+    }
+
     /// Full printer configuration as "Key: Value" lines.
     public static let readConfig = cmd("ALLCONFIG\r\nOUT \"\(end)\"")
-    /// Printer address in the Wi-Fi network, reply "+OK=a.b.c.d".
-    public static let readWiFiIP = cmd("WIFI GETIP\r\nOUT \"\(end)\"")
     public static let selfTest = cmd("SELFTEST")
 
     /// Feeds 2-3 labels without printing, measures label and gap length and switches the sensor to gap labels.
@@ -30,8 +42,9 @@ public enum XprinterCommand {
         cmd("GAP \(Int(gapDots.rounded())) dot,\(Int(offsetDots.rounded())) dot")
     }
 
-    /// Immediate status query (answered even while the printer is busy): one byte, see `PrinterStatus`.
-    public static let status = Data([27, 33, 63])
+    /// Immediate status query, sent like the vendor tool: `ESC ! exit` (answered with FE/FF) then `ESC ! ?`
+    /// (one status byte, see `PrinterStatus`). Without the `exit` the printer sometimes stays silent, e.g. after a restart.
+    public static let status = Data([27, 33]) + Data("exit\r\n".utf8) + Data([27, 33, 63])
 
     /// Restarts only the Wi-Fi module; it rejoins the saved network in a few seconds. Settings are kept.
     public static let restartWiFi = cmd("WIFI RESET")
@@ -102,16 +115,29 @@ public enum Xprinter {
     /// Printer status over USB (over Wi-Fi every reply costs, see NetworkPrinter).
     public static func status() throws -> PrinterStatus? {
         lock.lock(); defer { lock.unlock() }
-        return try USBPrinter.exchangeData(XprinterCommand.status, minBytes: 1, timeout: 1).last.map { PrinterStatus(rawValue: $0) }
+        // the status byte is the last one; the first answers ESC ! exit
+        return try USBPrinter.exchangeData(XprinterCommand.status, minBytes: 2, timeout: 1.5).last.map { PrinterStatus(rawValue: $0) }
     }
 
+    public struct IncompleteReply: LocalizedError {
+        public var errorDescription: String? { String(localized: "The printer's reply was incomplete. Try again.", bundle: .module) }
+    }
+
+    /// Full configuration. Throws when the reply is incomplete, so callers keep what they had.
     public static func config(via link: PrinterLink = .usb) throws -> PrinterConfig {
-        PrinterConfig(report: try exchange(link, XprinterCommand.readConfig, until: XprinterCommand.end, timeout: 6))
+        let q = XprinterCommand.query("ALLCONFIG")
+        guard let report = XprinterCommand.slice(try exchange(link, q.data, until: q.end, timeout: 6), begin: q.begin, end: q.end) else {
+            throw IncompleteReply()
+        }
+        let c = PrinterConfig(report: report)
+        guard c.isValid else { throw IncompleteReply() }
+        return c
     }
 
     /// The printer's Wi-Fi address, or nil while it is not connected.
     public static func wifiIP(via link: PrinterLink = .usb) throws -> String? {
-        let reply = try exchange(link, XprinterCommand.readWiFiIP, until: XprinterCommand.end)
+        let q = XprinterCommand.query("WIFI GETIP")
+        guard let reply = XprinterCommand.slice(try exchange(link, q.data, until: q.end), begin: q.begin, end: q.end) else { return nil }
         return PrinterConfig.okValue(reply).flatMap { $0 == "0.0.0.0" ? nil : $0 }
     }
 }
