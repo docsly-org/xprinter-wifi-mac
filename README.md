@@ -41,6 +41,8 @@ Tip: reserve the printer's address in your router (DHCP reservation), so it neve
 
 **Another Mac?** Open the app on it: it finds the printer on the network by itself, or you type the printer's address (shown in the app on the first Mac, or as `STA IP` on the self-test page) and press **Add to This Mac**. The driver is needed on that Mac too.
 
+**New roll?** In Printer Settings → Labels press **Calibrate to the Roll…** (USB): the printer feeds 2–3 labels without printing on them and learns the label and gap length. Then set the width and height below.
+
 **Label size.** In Printer Settings → Labels, type the width and height of your roll (for example 75 × 130 mm). It becomes the default paper size of the printer in macOS, so apps start with it. Change it when you load a roll of another size.
 
 **Printer Settings (⌘,)** — over USB, or over Wi-Fi once the printer is set up (no cable needed), read from the printer and applied immediately: darkness (0–15), speed (2–6 in/s), rotate 180°, mirror, reprint after an error, fine position (tear-off offset, shift, origin), printer info. A test page is printed only when you ask for it.
@@ -142,6 +144,8 @@ This is a free, unofficial project, not affiliated with Xprinter. It is provided
 Если принтер уже настроен, программа это видит и просто сообщает об этом; если он в Wi‑Fi, но не добавлен на этот Mac — добавляет одной кнопкой, без пароля. Сменить сеть Wi‑Fi можно только по кабелю USB — так опечатка в пароле не отрежет принтер от управления.
 
 **Другой Mac?** Запустите программу на нём: она сама найдёт принтер в сети или попросит ввести его адрес (он есть в программе на первом Mac или в строке `STA IP` на тестовой странице) — и добавит его кнопкой «Добавить на этот Mac». Драйвер нужен и на нём.
+
+**Новый рулон?** В «Настройках принтера → Этикетки» нажмите «Откалибровать по рулону…» (по USB): принтер прогонит 2–3 этикетки, ничего на них не печатая, и запомнит длину этикетки и промежутка. Затем укажите ширину и высоту ниже.
 
 **Размер этикеток.** В «Настройках принтера → Этикетки» укажите ширину и высоту рулона (например, 75 × 130 мм) — это станет размером бумаги по умолчанию, и программы будут сразу печатать в нём. Сменили рулон — поменяйте размер.
 
