@@ -317,8 +317,13 @@ final class PrinterModel: ObservableObject {
             return false
         }
         try? await Task.sleep(nanoseconds: 10_000_000_000)  // the Wi-Fi module restarts
-        await reload()
-        return config?.accessPointPassword == password
+        for _ in 0..<3 {  // the printer may still be busy with the restart
+            await reload()
+            if config?.accessPointPassword == password { return true }
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+        }
+        settingsError = loc("The printer did not confirm the new password. Check this section again in a minute.")
+        return false
     }
 
     /// Soft restart over USB ("Reset Printer"). Settings are kept; Wi-Fi comes back about 10 s later.
