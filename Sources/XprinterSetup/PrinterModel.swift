@@ -228,7 +228,7 @@ final class PrinterModel: ObservableObject {
         Task {
             do {
                 phase = .working(loc("Sending settings to the printer…"))
-                try await Self.background { try USBPrinter.send(XprinterCommand.connectWiFi(ssid: ssid, password: password)) }
+                try await Self.background { try Xprinter.send(XprinterCommand.connectWiFi(ssid: ssid, password: password), via: .usb) }
 
                 phase = .working(String(format: loc("Connecting to “%@”…"), ssid))
                 try? await Task.sleep(nanoseconds: 8_000_000_000)  // the Wi-Fi module restarts first
@@ -292,7 +292,7 @@ final class PrinterModel: ObservableObject {
             calibrating = true
             defer { calibrating = false }
             do {
-                try await Self.background { try USBPrinter.send(XprinterCommand.calibrateGapLabels) }
+                try await Self.background { try Xprinter.send(XprinterCommand.calibrateGapLabels, via: .usb) }
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
                 for _ in 0..<30 {  // wait until the feed is over
                     if let s = try? await Self.background({ try Xprinter.status() }), s.isReady { break }
@@ -315,7 +315,7 @@ final class PrinterModel: ObservableObject {
         Task {
             phase = .working(loc("Restarting…"))
             do {
-                try await Self.background { try USBPrinter.send(command) }
+                try await Self.background { try Xprinter.send(command, via: .usb) }
             } catch {
                 phase = .failed(error.localizedDescription)
                 return
