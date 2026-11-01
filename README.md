@@ -119,6 +119,8 @@ The app stores nothing but your connection choice and, if you typed one, the pri
 
 ## Protocol
 
+Full reference — every command found in the vendor tool, what was verified, reply formats, discovery, the Wi-Fi module's behaviour and macOS printing notes: **[docs/PROTOCOL.md](docs/PROTOCOL.md)**. The short version:
+
 Plain TSPL text sent raw to the printer over USB (bulk endpoints of the printer-class interface, vendor ID `0x2D37`) or TCP port 9100. Replies come back on the same channel.
 
 | Command | Effect |
