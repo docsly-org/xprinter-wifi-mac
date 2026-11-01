@@ -35,7 +35,14 @@ This is the only printer it was tested on. Other Xprinter label printers that sp
 
 1. **Install the Xprinter macOS driver** from [xprintertech.com](https://www.xprintertech.com/) (Support → Download). macOS does not include it. The app can set up Wi-Fi without it, but printing needs it.
 2. Download `Xprinter-Setup.zip` from [Releases](../../releases/latest), unzip, move **Xprinter Setup** to Applications.
-3. The app is not notarized by Apple: on first launch, right-click it → **Open** → **Open**.
+3. Open it. The app is not notarized by Apple, so the first time macOS blocks it — that is expected:
+   1. macOS says *“Xprinter Setup” Not Opened*. Click **Done**.
+   2. Open **System Settings → Privacy & Security** and scroll down to **Security**: *“Xprinter Setup” was blocked to protect your Mac.* Click **Open Anyway**.
+   3. macOS asks *Open “Xprinter Setup”?* Click **Open Anyway** and confirm with Touch ID or your password.
+
+   macOS remembers this; later launches open normally. Apple's own guide: [Open a Mac app from an unknown developer](https://support.apple.com/guide/mac-help/open-a-mac-app-from-an-unknown-developer-mh40616/mac). On macOS 14 and older, right-click the app → **Open** → **Open** also works; since macOS 15 it doesn't.
+
+   Prefer Terminal? `xattr -dr com.apple.quarantine "/Applications/Xprinter Setup.app"` removes the “downloaded from the internet” mark, then the app opens normally.
 
 Requires macOS 13 or later.
 
@@ -78,7 +85,7 @@ A broken module can't be fixed over the network: it does not pass the fix either
 
 ## FAQ
 
-**macOS says the app can't be checked for malicious software.** It is not notarized (that needs a paid Apple developer account). Right-click → **Open** → **Open** once.
+**macOS blocks the app: “Xprinter Setup” Not Opened.** It is not notarized (that needs a paid Apple developer account). Open it once via **System Settings → Privacy & Security → Open Anyway** — see [Install](#install), step 3.
 
 **Why does it ask for my location?** macOS shows Wi-Fi network names only to apps with Location access. The app asks only when you choose a network, and uses it only for that list. You can deny it and type the network name under **Other Network…**.
 
