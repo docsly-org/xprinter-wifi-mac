@@ -147,7 +147,10 @@ The commands were identified for interoperability by examining what the vendor's
 
 ## Build from source
 
+See **[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)** — code layout, rules for testing on a real printer, and how to make a release. In short:
+
 ```sh
+scripts/setup-dev.sh               # once after cloning: commit as docsly-org
 swift test                         # unit tests
 XPRINTER_LIVE=1 swift test         # plus a read-only check with a printer on USB
 ./build-app.sh                     # → dist/Xprinter Setup.app and dist/Xprinter-Setup.zip
