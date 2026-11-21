@@ -56,7 +56,7 @@ Requires macOS 13 or later.
 
 **Another Mac?** Install the driver and open the app there. It finds the printer on the network, or asks for its address (shown in the app on the first Mac, or as `STA IP` on the self-test page), then **Add to This Mac**.
 
-**New roll?** Printer Settings → Labels → **Calibrate…** (USB). **Continuous paper?** Printer Settings → Labels → Paper → *Continuous paper*; switching back to labels is instant and feeds nothing, the printer remembers the label length. Then type the label width and height: that becomes the default paper size, so apps start with it.
+**New roll?** Printer Settings → Labels → **Calibrate…** (USB or Wi-Fi; over Wi-Fi the app waits a fixed 10 s instead of watching the status). **Continuous paper?** Printer Settings → Labels → Paper → *Continuous paper*; switching back to labels is instant and feeds nothing, the printer remembers the label length. Then type the label width and height: that becomes the default paper size, so apps start with it.
 
 <p align="center">
   <img src="Screenshots/settings-printing-en.png" width="200" alt="Printing tab">

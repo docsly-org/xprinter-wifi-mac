@@ -89,7 +89,7 @@ private struct LabelsTab: View {
                     Text("Labels with gaps", bundle: .module).tag(Paper.labels)
                     Text("Continuous paper", bundle: .module).tag(Paper.continuous)
                 } label: { Text("Paper", bundle: .module) }
-                .disabled(!printer.usbPlugged || printer.calibrating)
+                .disabled(printer.calibrating)
 
                 if c.sensor != .continuous {
                     LabeledContent { Text(measuredText(c)) } label: { Text("Label length", bundle: .module) }
@@ -97,14 +97,11 @@ private struct LabelsTab: View {
                         Spacer()
                         if printer.calibrating { ProgressView().controlSize(.small) }
                         Button { confirmCalibration = true } label: { Text("Calibrate…", bundle: .module) }
-                            .disabled(!printer.usbPlugged || printer.calibrating)
+                            .disabled(printer.calibrating)
                     }
                 }
             } footer: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Switching paper type feeds nothing. After loading a roll of another size, calibrate: the printer feeds 2–3 labels without printing and learns their length.", bundle: .module)
-                    if !printer.usbPlugged { Text("Needs the USB cable.", bundle: .module) }
-                }
+                Text("Switching paper type feeds nothing. After loading a roll of another size, calibrate: the printer feeds 2–3 labels without printing and learns their length. Works over USB and Wi-Fi.", bundle: .module)
                 .font(.callout).foregroundStyle(.secondary)
             }
 

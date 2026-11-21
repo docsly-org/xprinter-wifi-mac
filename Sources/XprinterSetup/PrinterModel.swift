@@ -96,7 +96,10 @@ final class PrinterModel: ObservableObject {
         polling = Task {
             while !Task.isCancelled {
                 if case .working = phase { try? await Task.sleep(nanoseconds: 2_000_000_000); continue }
-                usbPlugged = await Self.background { USBPrinter.isConnected }
+                // @Published fires on every assignment, equal or not; each fire re-renders the Settings fields
+                // and throws away what the user is typing. So assign only on a change.
+                let plugged = await Self.background { USBPrinter.isConnected }
+                if plugged != usbPlugged { usbPlugged = plugged }
                 let usb = preference != .wifi && usbPlugged
                 if usb {
                     if link != .usb || recheck {
@@ -109,9 +112,9 @@ final class PrinterModel: ObservableObject {
                     }
                 } else if preference == .usb {
                     if link != nil { link = nil; config = nil }
-                    notResponding = false
-                    wifiDown = false
-                    status = nil
+                    if notResponding { notResponding = false }
+                    if wifiDown { wifiDown = false }
+                    if status != nil { status = nil }
                 } else if link == .usb || recheck {
                     wifiDown = false  // only known (and fixable) with the cable
                     status = nil
@@ -284,13 +287,13 @@ final class PrinterModel: ObservableObject {
 
     func printSelfTest() { apply(XprinterCommand.selfTest) }
 
-    /// Calibrates the sensor to the loaded roll (USB only): feeds 2-3 labels without printing.
+    /// Calibrates the sensor to the loaded roll: feeds 2-3 labels without printing.
+    /// Over USB it waits for the printer's status; over Wi-Fi (no status replies) it waits a fixed time.
     func calibrate() {
-        guard !Demo.isOn, usbPlugged else { return }
+        guard !Demo.isOn, let link else { return }
         Task {
             settingsError = nil
-            let before = try? await Self.background { try Xprinter.status() }
-            if let before, !before.isReady {
+            if link == .usb, let before = try? await Self.background({ try Xprinter.status() }), !before.isReady {
                 status = before
                 settingsError = before.contains(.coverOpen) ? loc("Close the printer cover first.")
                     : before.contains(.paperOut) ? loc("Load the label roll first.") : loc("The printer is busy. Try again in a moment.")
@@ -299,13 +302,17 @@ final class PrinterModel: ObservableObject {
             calibrating = true
             defer { calibrating = false }
             do {
-                try await Self.background { try Xprinter.send(XprinterCommand.calibrateGapLabels, via: .usb) }
+                try await Self.background { try Xprinter.send(XprinterCommand.calibrateGapLabels, via: link) }
                 try? await Task.sleep(nanoseconds: 2_000_000_000)
-                for _ in 0..<30 {  // wait until the feed is over
-                    if let s = try? await Self.background({ try Xprinter.status() }), s.isReady { break }
-                    try? await Task.sleep(nanoseconds: 1_000_000_000)
+                if link == .usb {
+                    for _ in 0..<30 {  // wait until the feed is over
+                        if let s = try? await Self.background({ try Xprinter.status() }), s.isReady { break }
+                        try? await Task.sleep(nanoseconds: 1_000_000_000)
+                    }
+                } else {
+                    try? await Task.sleep(nanoseconds: 8_000_000_000)  // shortcut: fixed wait, no status over Wi-Fi
                 }
-                await reload()
+                if let fresh = await Self.readConfig(via: link) { config = fresh }
             } catch {
                 settingsError = error.localizedDescription
             }
