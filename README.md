@@ -19,7 +19,7 @@
 - **Connects the printer to your Wi-Fi in one click.** Pick a network (only 2.4 GHz ones are listed — the printer can't use 5 GHz), type the password, press **Connect**. The app sends the settings over USB, asks the printer for its new address and adds it to macOS as a Wi-Fi printer. No test pages.
 - **Recognizes a printer that is already set up**, and adds it to another Mac — found on the network, or by its address.
 - **Printer Settings** (⌘,), in tabs like Apple's own apps — over USB, or over Wi-Fi without the cable: darkness, speed, rotate 180°, mirror, reprint after an error, position on the label (in mm).
-- **Labels:** labels with gaps or continuous paper (switching feeds nothing), **Calibrate** — the printer feeds 2–3 blank labels and learns their length — and the default label size for every app.
+- **Labels:** labels with gaps or continuous paper (switching feeds nothing), **Calibrate** — the printer feeds 2–3 blank labels and learns their length — the gap between labels (editable), saved rolls (size + gap, one click to bring back), and the default label size for every app.
 - **Printer status:** cover open, out of labels, paper jam.
 - **Fixes without the power button:** **Reconnect Wi-Fi** and **Restart Printer** (see [Known limitation](#known-printer-limitation-wi-fi-stays-healthy-for-about-30-minutes)).
 - **Printer's own network:** see and change the password of the printer's built-in Wi-Fi (factory password `12345678`).
@@ -56,7 +56,9 @@ Requires macOS 13 or later.
 
 **Another Mac?** Install the driver and open the app there. It finds the printer on the network, or asks for its address (shown in the app on the first Mac, or as `STA IP` on the self-test page), then **Add to This Mac**.
 
-**New roll?** Printer Settings → Labels → **Calibrate…** (USB or Wi-Fi; over Wi-Fi the app waits a fixed 10 s instead of watching the status). **Continuous paper?** Printer Settings → Labels → Paper → *Continuous paper*; switching back to labels is instant and feeds nothing, the printer remembers the label length. Then type the label width and height: that becomes the default paper size, so apps start with it.
+**New roll?** Printer Settings → Labels → **Calibrate…** (USB or Wi-Fi; over Wi-Fi the app waits a fixed 10 s instead of watching the status). **Continuous paper?** Printer Settings → Labels → Paper → *Continuous paper*; switching back to labels is instant and feeds nothing, the printer remembers the label length. Then type the label width and height: that becomes the default paper size, so apps start with it. **Save current** keeps size and gap as a roll.
+
+**Print drifts label by label?** The vendor driver sends `GAP 0,0` with every job, which switches the printer to continuous paper. The app now sets the PPD to labels with the measured gap whenever you calibrate or switch paper type, so calibration survives printing.
 
 <p align="center">
   <img src="Screenshots/settings-printing-en.png" width="200" alt="Printing tab">

@@ -83,7 +83,7 @@ private struct LabelsTab: View {
     enum Paper: Hashable { case labels, continuous }
 
     var body: some View {
-        PrinterForm(height: 420) { c in
+        PrinterForm(height: 530) { c in
             Section {
                 Picker(selection: Binding(get: { c.sensor == .continuous ? Paper.continuous : .labels }, set: choose)) {
                     Text("Labels with gaps", bundle: .module).tag(Paper.labels)
@@ -93,6 +93,9 @@ private struct LabelsTab: View {
 
                 if c.sensor != .continuous {
                     LabeledContent { Text(measuredText(c)) } label: { Text("Label length", bundle: .module) }
+                    if c.sensor == .gap, let g = c.gapMM {
+                        mm("Gap between labels", g, 0.5...10) { printer.setGap($0) }
+                    }
                     HStack {
                         Spacer()
                         if printer.calibrating { ProgressView().controlSize(.small) }
@@ -112,10 +115,23 @@ private struct LabelsTab: View {
                 } else {
                     Text("Add the printer to this Mac first.", bundle: .module).foregroundStyle(.secondary)
                 }
+                if printer.labelSize != nil {
+                    HStack {
+                        Spacer()
+                        Menu { ForEach(printer.rolls) { r in Button(r.title) { printer.use(r) } } } label: { Text("Saved rolls", bundle: .module) }
+                            .disabled(printer.rolls.isEmpty).fixedSize()
+                        Menu {
+                            ForEach(printer.rolls) { r in Button(r.title) { printer.rolls.removeAll { $0 == r } } }
+                        } label: { Text("Remove", bundle: .module) }
+                            .disabled(printer.rolls.isEmpty).fixedSize()
+                        Button { printer.saveRoll() } label: { Text("Save current", bundle: .module) }
+                            .disabled(c.sensor != .gap)
+                    }
+                }
             } header: { Text("Default paper size", bundle: .module) }
               footer: {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Used when you print from any app.", bundle: .module)
+                    Text("Used when you print from any app. Save the size with the gap as a roll to bring it back in one click.", bundle: .module)
                     if let e = printer.labelError { Text(e).foregroundStyle(.red) }
                 }
                 .font(.callout).foregroundStyle(.secondary)
@@ -134,9 +150,11 @@ private struct LabelsTab: View {
         switch paper {
         case .continuous:
             printer.apply(XprinterCommand.continuousPaper, shows: ["Sensor Mode": "CONTINUOUS(T)"])
+            printer.syncPaperType()
         case .labels:
             if let gap = c.gapDots, c.labelLengthMM ?? 0 > 0 {
                 printer.apply(XprinterCommand.gapLabels(gapDots: gap, offsetDots: c.gapOffsetDots), shows: ["Sensor Mode": "GAP"])
+                printer.syncPaperType()
             } else {
                 confirmCalibration = true
             }
@@ -283,7 +301,7 @@ private struct PrinterForm<Content: View>: View {
     }
 }
 
-private func mmText(_ v: Double) -> String { v.formatted(.number.precision(.fractionLength(0...1))) }
+func mmText(_ v: Double) -> String { v.formatted(.number.precision(.fractionLength(0...1))) }
 
 private func info(_ title: String.LocalizationValue, _ value: String?) -> some View {
     LabeledContent { Text(value ?? "—").textSelection(.enabled) } label: { Text(loc(title)) }

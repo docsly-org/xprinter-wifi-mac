@@ -62,12 +62,29 @@ extension CUPS {
 
     /// Makes `width` x `height` mm the default paper of every Xprinter printer in macOS.
     public static func setLabelSize(width: Double, height: Double) throws {
+        try editPPDs { LabelSize.apply(ppd: $0, width: width, height: height) }
+    }
+
+    /// The vendor filter sends `GAP 0,0` with every job unless the PPD says otherwise, and that switches the printer
+    /// to continuous paper and throws the calibration away. `gapMM` nil = continuous paper, else labels with that gap.
+    public static func setPaperType(gapMM: Double?) throws {
+        let type = gapMM == nil ? "Continue" : "LabelGaps"
+        let gap = Int(min(max(gapMM ?? 0, 1), 10).rounded())  // the PPD offers whole mm; GAP 0 would mean continuous
+        try editPPDs { ppd in
+            ppd.components(separatedBy: "\n").map {
+                $0.hasPrefix("*DefaultPaperType:") ? "*DefaultPaperType: \(type)"
+                : $0.hasPrefix("*DefaultGapsHeight:") ? "*DefaultGapsHeight: \(gap)" : $0
+            }.joined(separator: "\n")
+        }
+    }
+
+    private static func editPPDs(_ edit: (String) -> String) throws {
         for q in xprinterQueues() {
             let path = "/etc/cups/ppd/\(q.name).ppd"
             guard let ppd = try? String(contentsOfFile: path, encoding: .isoLatin1) else { continue }
             let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("\(q.name)-\(UUID().uuidString).ppd")
             defer { try? FileManager.default.removeItem(at: tmp) }
-            try LabelSize.apply(ppd: ppd, width: width, height: height).write(to: tmp, atomically: true, encoding: .isoLatin1)
+            try edit(ppd).write(to: tmp, atomically: true, encoding: .isoLatin1)
             try run("/usr/sbin/lpadmin", ["-p", q.name, "-P", tmp.path])
         }
     }

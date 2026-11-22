@@ -52,6 +52,41 @@ final class PrinterModel: ObservableObject {
         }
     }
 
+    /// A roll the user saved: paper size and gap (mm).
+    struct Roll: Codable, Equatable, Identifiable {
+        var width: Double, height: Double, gap: Double
+        var id: String { "\(width)x\(height)/\(gap)" }
+        var title: String { "\(mmText(width)) × \(mmText(height)) mm, " + String(format: loc("gap %@ mm"), mmText(gap)) }
+    }
+    @Published var rolls: [Roll] = (UserDefaults.standard.data(forKey: "rolls").flatMap { try? JSONDecoder().decode([Roll].self, from: $0) }) ?? [] {
+        didSet { UserDefaults.standard.set(try? JSONEncoder().encode(rolls), forKey: "rolls") }
+    }
+
+    /// Gap between labels in mm: set on the printer without feeding, then kept for print jobs.
+    func setGap(_ mm: Double) {
+        guard let c = config, c.sensor == .gap else { return }
+        apply(XprinterCommand.gapLabels(gapDots: mm * 8, offsetDots: c.gapOffsetDots), shows: ["Gap Size": "\(Int((mm * 8).rounded()))"])
+        syncPaperType()
+    }
+
+    func saveRoll() {
+        guard let size = labelSize, let gap = config?.gapMM, config?.sensor == .gap else { return }
+        let roll = Roll(width: size.width, height: size.height, gap: gap)
+        if !rolls.contains(roll) { rolls.append(roll) }
+    }
+
+    func use(_ roll: Roll) {
+        setLabelSize(width: roll.width, height: roll.height)
+        setGap(roll.gap)
+    }
+
+    /// Makes print jobs keep the sensor mode the printer is in now (see CUPS.setPaperType).
+    func syncPaperType() {
+        guard !Demo.isOn, let c = config, c.sensor != .blackMark else { return }
+        let gap = c.sensor == .gap ? (c.gapMM ?? 1) : nil
+        Task { try? await Self.background { try CUPS.setPaperType(gapMM: gap) } }
+    }
+
     /// How to reach the printer; "auto" prefers USB and falls back to Wi-Fi. Saved between launches.
     @Published var preference: LinkPreference = LinkPreference(rawValue: UserDefaults.standard.string(forKey: "link") ?? "") ?? .auto {
         didSet { UserDefaults.standard.set(preference.rawValue, forKey: "link"); link = nil; recheck = true }
@@ -313,6 +348,7 @@ final class PrinterModel: ObservableObject {
                     try? await Task.sleep(nanoseconds: 8_000_000_000)  // shortcut: fixed wait, no status over Wi-Fi
                 }
                 if let fresh = await Self.readConfig(via: link) { config = fresh }
+                syncPaperType()
             } catch {
                 settingsError = error.localizedDescription
             }
